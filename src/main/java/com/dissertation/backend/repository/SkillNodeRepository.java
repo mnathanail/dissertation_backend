@@ -1,5 +1,6 @@
 package com.dissertation.backend.repository;
 
+import com.dissertation.backend.node.CandidateSkillRelationship;
 import com.dissertation.backend.node.SkillNode;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -8,7 +9,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import java.util.List;
 
 @RepositoryRestResource(collectionResourceRel = "skillNode", path = "skill_node")
-public interface SkillNodeRepository extends Neo4jRepository<SkillNode, Long> {
+public interface SkillNodeRepository extends Neo4jRepository<SkillNode, String> {
 
     @Query(
             "UNWIND $skills as row " +
@@ -24,9 +25,15 @@ public interface SkillNodeRepository extends Neo4jRepository<SkillNode, Long> {
 
     @Query("MATCH (c:CandidateNode {entity_id: $id})-[r:KNOWS]->(s:Skill) RETURN s")
     List<SkillNode> findSkillsByCandidateEntityId(Long id);
+
+    List<SkillNode> findAllByEntityIdIn(List<Long> entity_id);
+
+    @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid in $uuids DELETE r;")
+    void deleteAllByRelUuidIn(Long entityId, List<String> uuids);
+
+    @Query("MATCH (c:CandidateNode {entity_id: $entityId} -[r:KNOWS]->(:SkillNode) SET r.years_of_experience=$yoe RETURN r")
+    CandidateSkillRelationship updateYearsOfExperience(Long entityId, Long yoe);
 }
-//{years_of_experience: $row.years_of_experience}
-//MATCH (c:CandidateNode {id:4}), (s:Skill {id: 124}) MERGE (c)-[r:KNOWS] -> (s) RETURN c, r, s;
 
 /*
 
@@ -41,4 +48,11 @@ public interface SkillNodeRepository extends Neo4jRepository<SkillNode, Long> {
 "UNWIND $skills as row " +
         "MATCH (c:CandidateNode {entity_id:$id}), (s:SkillNode) WHERE s.entity_id IN row.id " +
         "MERGE (c)-[r:KNOWS]->(s) " +
-        "SET r+= row.props "*/
+        "SET r+= row.props "
+
+  MATCH (n:`SkillNode`) WHERE id(n) IN $__ids__ WITH n, id(n) AS __internalNeo4jId__
+  RETURN n{.entity_id, .id, .name, __nodeLabels__: labels(n), __internalNeo4jId__: id(n)}
+
+  MATCH (n:`SkillNode`) WHERE n.entity_id IN $entityId RETURN n{.entity_id, .id, .name, __nodeLabels__: labels(n), __internalNeo4jId__: id(n)}
+
+ */

@@ -4,9 +4,7 @@ import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.entity.Skill;
 import com.dissertation.backend.entity.Summary;
 import com.dissertation.backend.model.Login;
-import com.dissertation.backend.node.EducationNode;
-import com.dissertation.backend.node.ExperienceNode;
-import com.dissertation.backend.node.SkillNode;
+import com.dissertation.backend.node.*;
 import com.dissertation.backend.projection.CandidateNoPassword;
 import com.dissertation.backend.repository.CandidateNodeRepository;
 import com.dissertation.backend.repository.CandidateRepository;
@@ -18,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RepositoryRestController
 
@@ -226,11 +225,10 @@ public class CandidateController {
      * @return Response Entity
      */
     @GetMapping("/{id}/get/candidate-skill-list")
-    public ResponseEntity<List<SkillNode>> getCandidateSkillList(@PathVariable("id") Long candidateId) {
-        List<SkillNode> skills = skillService.getCandidateSkillList(candidateId);
+    public ResponseEntity<Set<CandidateSkillRelationship>> getCandidateSkillList(@PathVariable("id") Long candidateId) {
+        Set<CandidateSkillRelationship> skills = skillService.getCandidateSkillList(candidateId);
         return ResponseEntity.ok(skills);
     }
-
 
     @PostMapping("/{id}/save/skill")
     public ResponseEntity<Skill> setSearchSkill(@RequestBody Skill skill) {
@@ -245,11 +243,12 @@ public class CandidateController {
     }
 
     @PostMapping("/{id}/save/candidate-skill-list")
-    public ResponseEntity<Boolean> setNodeListSkills(
+    public ResponseEntity<Set<CandidateSkillRelationship>> setNodeListSkills(
             @PathVariable("id") Long candidateId,
-            @RequestBody List<SkillNode> skill) {
-        skillService.setSkills(candidateId, skill);
-        return ResponseEntity.ok(true);
+            @RequestBody List<GeneralSkillNode> skill) {
+
+        Set<CandidateSkillRelationship> candidateNodeSet= skillService.setSkills(candidateId, skill);
+        return ResponseEntity.ok(candidateNodeSet);
     }
 
     /*---------------------------/Skill-------------------------------------------------------------------------------*/

@@ -12,27 +12,21 @@ import org.springframework.data.neo4j.core.schema.TargetNode;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @RelationshipProperties
-public class SkillRelationship {
+public class CandidateSkillRelationship {
 
-    /*@StartNode*/
     @TargetNode
-    private CandidateNode candidateNode;
+    private SkillNode skillNode;
 
-    /*@EndNode*/
-    /*private Skill skill;*/
+    @Property(name = "relUuid")
+    private String relUuid;
 
     @Property(name = "years_of_experience")
     private Long yoe;
 
-    public SkillRelationship(CandidateNode candidateNode, Long yoe){
-        this.candidateNode = candidateNode;
+    public CandidateSkillRelationship(SkillNode skillNode, Long yoe, String relUuid){
+        this.skillNode = skillNode;
         this.yoe = yoe;
-
-/*Ca
-        this.candidateNode.getSkills().add( this.skill);
-*/
-        //this.skill.setYearsOfExperience(this.years_of_experience);
-       // this.skill.getNodeCandidateNodes().add(this.candidateNode);
+        this.relUuid = relUuid;
     }
 
 }

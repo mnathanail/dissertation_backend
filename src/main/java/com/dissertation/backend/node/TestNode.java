@@ -19,4 +19,19 @@ public class TestNode {
 
     @Property(name = "name")
     String name;
+
+    @Property(name = "email")
+    String email;
+
+    public TestNode(String name, String email) {
+    }
+
+    public static TestNode of(String name, String email) {
+        return new TestNode(name, email);
+    }
+
+    public String getValue() {
+        return name;
+    }
+
 }

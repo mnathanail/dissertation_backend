@@ -1,8 +1,8 @@
 package com.dissertation.backend.repository;
 
 import com.dissertation.backend.node.CandidateNode;
-import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.web.bind.annotation.RequestParam;
 
