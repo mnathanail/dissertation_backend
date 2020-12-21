@@ -7,6 +7,7 @@ import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
 import java.util.List;
+import java.util.Optional;
 
 @RepositoryRestResource(collectionResourceRel = "skillNode", path = "skill_node")
 public interface SkillNodeRepository extends Neo4jRepository<SkillNode, String> {
@@ -27,9 +28,22 @@ public interface SkillNodeRepository extends Neo4jRepository<SkillNode, String> 
     List<SkillNode> findSkillsByCandidateEntityId(Long id);
 
     List<SkillNode> findAllByEntityIdIn(List<Long> entity_id);
+/*
 
+    @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid = $uuids DELETE r;")
+    void deleteAllByRelUuidIn(Long entityId, String uuids);
+*/
+
+    @Query("MATCH (:CandidateNode)-[r:KNOWS]->(:SkillNode) WHERE r.relUuid = $uuid RETURN r;")
+    Optional<Boolean> checkIfRelationshipExists(String uuid);
+
+    @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid = $uuid DELETE r;")
+    void deleteAllByRelUuidIn(Long entityId, String uuid);
+
+
+/*  where in..
     @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid in $uuids DELETE r;")
-    void deleteAllByRelUuidIn(Long entityId, List<String> uuids);
+    void deleteAllByRelUuidIn(Long entityId, List<String> uuids);*/
 
     @Query("MATCH (c:CandidateNode {entity_id: $entityId} -[r:KNOWS]->(:SkillNode) SET r.years_of_experience=$yoe RETURN r")
     CandidateSkillRelationship updateYearsOfExperience(Long entityId, Long yoe);

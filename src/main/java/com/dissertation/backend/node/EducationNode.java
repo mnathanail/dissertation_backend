@@ -1,39 +1,39 @@
 package com.dissertation.backend.node;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.dissertation.backend.node.converters.PeriodConverter;
+import com.dissertation.backend.node.shared.Period;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.*;
 
 @Node
 @Getter
 @Setter
 public class EducationNode {
+
     @Id
     @GeneratedValue
-    @JsonSerialize
     private Long id;
 
+    @JsonProperty("educationId")
+    @Property(name = "education_id")
+    public String educationId;
+
+    @JsonProperty("title")
     @Property(name="title")
     private String title;
 
+    @JsonProperty("degree")
     @Property(name="degree")
     private String degree;
 
+    @JsonProperty("school")
     @Property(name="school")
     private String school;
 
-/*    @Property(name="period")
-    private List<Period> period;
-
-    @Transient
-    @Builder
-    final static class Period{
-        private final String start;
-        private final String end;
-    }*/
+    @JsonProperty("period")
+    @CompositeProperty(converter = PeriodConverter.class)
+    private Period period;
 
 }

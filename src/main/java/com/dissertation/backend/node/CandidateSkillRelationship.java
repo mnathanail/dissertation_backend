@@ -21,11 +21,11 @@ public class CandidateSkillRelationship {
     private String relUuid;
 
     @Property(name = "years_of_experience")
-    private Long yoe;
+    private Long yearsOfExperience;
 
-    public CandidateSkillRelationship(SkillNode skillNode, Long yoe, String relUuid){
+    public CandidateSkillRelationship(SkillNode skillNode, Long yearsOfExperience, String relUuid){
         this.skillNode = skillNode;
-        this.yoe = yoe;
+        this.yearsOfExperience = yearsOfExperience;
         this.relUuid = relUuid;
     }
 

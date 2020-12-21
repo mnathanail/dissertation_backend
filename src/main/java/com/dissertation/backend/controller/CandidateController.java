@@ -180,7 +180,7 @@ public class CandidateController {
     @GetMapping(value = "/{id}/get/education/{educationId}")
     public ResponseEntity<EducationNode> getCandidateEducation(
             @PathVariable("id") String candidateId,
-            @PathVariable("educationId") Long educationId) {
+            @PathVariable("educationId") String educationId) {
         EducationNode ed = educationService.getEducation(educationId);
         return ResponseEntity.ok(ed);
     }
@@ -200,7 +200,7 @@ public class CandidateController {
      * @return
      */
     @DeleteMapping(value = "/{id}/delete/education/{educationId}")
-    public ResponseEntity<Boolean> deleteCandidateEducation(@PathVariable("educationId") Long educationId) {
+    public ResponseEntity<Boolean> deleteCandidateEducation(@PathVariable("educationId") String educationId) {
         educationService.deleteEducation(educationId);
         return ResponseEntity.ok(true);
     }
@@ -249,6 +249,26 @@ public class CandidateController {
 
         Set<CandidateSkillRelationship> candidateNodeSet= skillService.setSkills(candidateId, skill);
         return ResponseEntity.ok(candidateNodeSet);
+    }
+
+    @PatchMapping("/{id}/patch/candidate-skill-list")
+    public ResponseEntity<Set<CandidateSkillRelationship>> patchNodeListSkills(
+            @PathVariable("id") Long candidateId,
+            @RequestBody List<CandidateSkillRelationship> skill) {
+
+        Set<CandidateSkillRelationship> candidateNodeSet= skillService.updateRelationshipYoe(candidateId, skill);
+        return ResponseEntity.ok(candidateNodeSet);
+    }
+
+    /**
+     * @param skillUuid
+     * @return
+     */
+    @DeleteMapping(value = "/{id}/delete/candidate-skill/{skillUuid}")
+    public ResponseEntity<Boolean> deleteSkillCandidateBySkillUuid(@PathVariable("id") Long candidateId,
+                                                                   @PathVariable("skillUuid") String skillUuid) {
+        Boolean deleteExperienceNode = skillService.deleteRelationshipCandidateSkill(candidateId, skillUuid);
+        return ResponseEntity.ok(!deleteExperienceNode);
     }
 
     /*---------------------------/Skill-------------------------------------------------------------------------------*/

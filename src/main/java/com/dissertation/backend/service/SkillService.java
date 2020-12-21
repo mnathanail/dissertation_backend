@@ -12,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,7 +66,6 @@ public class SkillService {
         return newSkills;
     }
 
-    @Transactional
     public Set<CandidateSkillRelationship> setSkills(Long id, List<GeneralSkillNode> generalSkillsNode) {
 
         List<SkillNode> skillNodes = new ArrayList<>();
@@ -120,43 +118,61 @@ public class SkillService {
                 });
 */
 
-        CandidateNode cas = this.candidateNodeRepository.save(candidate);
-
         List<CandidateNode> candidateNodeList = candidateNodeRepository.saveAll(candidateSkillRelationship);
 
         Set<CandidateSkillRelationship> candidateSkillsWithExperience = candidateNodeList.stream()
                 .flatMap(c -> c.getCandidateSkillRelationships().stream()).collect(Collectors.toSet());
 
-
         return candidateSkillsWithExperience;
     }
 
-    public void deleteRelationshipCandidateSkill(Long id, List<CandidateSkillRelationship> candidateSkillRelationships){
-
-        List<String> uuids = candidateSkillRelationships
-                .stream()
-                .map(CandidateSkillRelationship::getRelUuid)
-                .collect(Collectors.toList());
+    public Set<CandidateSkillRelationship> updateRelationshipYoe(Long id,List<CandidateSkillRelationship> candidateSkillRelationships){
 
         CandidateNode candidate = candidateNodeRepository.findCandidateNodeByEntityId(id)
                 .orElseThrow(RuntimeException::new);
-        this.skillNodeRepository.deleteAllByRelUuidIn(id, uuids);
+
+        IntStream
+                .range(0, candidateSkillRelationships.size())
+                .forEach(index ->{
+                    CandidateSkillRelationship skillNode = candidateSkillRelationships.get(index);
+
+                    boolean isPresent = candidate.getCandidateSkillRelationships().stream()
+                            .anyMatch(o -> {
+                               return o.getSkillNode().getName().equals(skillNode.getSkillNode().getName())
+                                       && o.getRelUuid().equals(skillNode.getRelUuid());
+                            });
+
+
+                    if( isPresent )
+                    {
+                        candidate.getCandidateSkillRelationships().forEach( c-> {
+                            if(c.getRelUuid() != null) {
+                                if (c.getRelUuid().equals(skillNode.getRelUuid())) {
+                                    c.setYearsOfExperience(skillNode.getYearsOfExperience());
+                                }
+                            }
+                        });
+                    }
+                });
+
+        CandidateNode candidateNode =  this.candidateNodeRepository.save(candidate);
+
+        return candidateNode.getCandidateSkillRelationships();
+
     }
 
-    public void updateRelationshipYoe(Long id,CandidateSkillRelationship candidateSkillRelationship, Long yoe){
+    public boolean deleteRelationshipCandidateSkill(Long id, String uuid){
+
+/*        List<String> uuids = candidateSkillRelationships
+                .stream()
+                .map(CandidateSkillRelationship::getRelUuid)
+                .collect(Collectors.toList());*/
 
         CandidateNode candidate = candidateNodeRepository.findCandidateNodeByEntityId(id)
                 .orElseThrow(RuntimeException::new);
-
-        String uuid = candidateSkillRelationship.getRelUuid();
-        candidate.getCandidateSkillRelationships().forEach(c -> {
-            if(c.getRelUuid() != null){
-                if(c.getRelUuid().equals(uuid)){
-                    c.setYoe(yoe);
-                }
-            }
-        });
-
+        this.skillNodeRepository.deleteAllByRelUuidIn(id, uuid);
+        Optional<Boolean> isDeleted = this.skillNodeRepository.checkIfRelationshipExists(uuid);
+        return isDeleted.isPresent();
     }
 
 }
