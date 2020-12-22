@@ -1,27 +1,27 @@
 package com.dissertation.backend.node;
 
-/*
-@RelationshipEntity(type = "HAS_EDUCATION")
-*/
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+
+@Getter
+@Setter
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@RelationshipProperties
 public class CandidateEducationRelationship {
 
-    private Long id;
-
-/*
-    @StartNode
-*/
-    CandidateNode candidateNode;
-/*
-    @EndNode
-*/
+    @TargetNode
     EducationNode educationNode;
 
-    public CandidateEducationRelationship(CandidateNode candidateNode, EducationNode educationNode) {
-        this.candidateNode = candidateNode;
-        this.educationNode = educationNode;
+    @Property(name = "relUuid")
+    private String relUuid;
 
-/*
-        this.candidateNode.getEducationNodes().add(this.educationNode);
-*/
+    public CandidateEducationRelationship(EducationNode educationNode,  String relUuid) {
+        this.relUuid = relUuid;
+        this.educationNode = educationNode;
     }
+
 }

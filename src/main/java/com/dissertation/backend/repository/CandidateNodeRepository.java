@@ -20,10 +20,10 @@ public interface CandidateNodeRepository extends Neo4jRepository<CandidateNode, 
             "MERGE (c)-[r:EXPERIENCE]->(e);")
     void createRelationCandidateExperience(Long candidate_id, String exp_id);
 
-    @Query("MATCH (c:CandidateNode {id: $candidate_id}), " +
-            "(e:EducationNode {id: $edu_id})" +
-            "MERGE (c)-[r:EDUCATION]->(e) RETURN c, r, e")
-    void createRelationCandidateEducation(Long candidate_id, Long edu_id);
+    @Query("MATCH (c:CandidateNode {entity_id: $candidate_id}), " +
+            "(e:EducationNode {education_id: $edu_id})" +
+            "MERGE (c)-[r:EDUCATION]->(e);")
+    void createRelationCandidateEducation(Long candidate_id, String edu_id);
 
 
 /*

@@ -34,10 +34,10 @@ public class CandidateNode implements Serializable {
 
 /*
     @Relationship(type = "APPLIED_FOR", direction = Relationship.Direction.OUTGOING)
-    private List<JobNode> jobNodes;
+    private List<JobNode> jobNodes;*/
 
     @Relationship(type = "EDUCATION", direction = Relationship.Direction.OUTGOING)
-    private List<EducationNode> educationNodes;*/
+    private Set<EducationNode> educationNodes;
 
     @Relationship(type = "KNOWS", direction = Relationship.Direction.OUTGOING)
     private Set<CandidateSkillRelationship> candidateSkillRelationships = new HashSet<>();

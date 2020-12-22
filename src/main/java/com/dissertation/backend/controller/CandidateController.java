@@ -190,8 +190,8 @@ public class CandidateController {
      * @return
      */
     @GetMapping(value = "/{id}/get/education")
-    public ResponseEntity<List<EducationNode>> getCandidateEducationList(@PathVariable("id") Long candidateId) {
-        List<EducationNode> ed = educationService.getListEducation(candidateId);
+    public ResponseEntity<Set<EducationNode>> getCandidateEducationList(@PathVariable("id") Long candidateId) {
+        Set<EducationNode> ed = educationService.getListEducation(candidateId);
         return ResponseEntity.ok(ed);
     }
 
@@ -199,8 +199,24 @@ public class CandidateController {
      * @param educationId
      * @return
      */
+    @PatchMapping(value = "/{id}/patch/education/{educationId}")
+    public ResponseEntity<EducationNode> patchCandidateEducation(
+            @PathVariable("id") Long candidateId,
+            @PathVariable("educationId") String educationId,
+            @RequestBody EducationNode educationNode) {
+
+        EducationNode exp =  educationService.patchEducation(educationId, educationNode);
+        return ResponseEntity.ok(exp);
+    }
+
+    /**
+     * @param educationId
+     * @return
+     */
     @DeleteMapping(value = "/{id}/delete/education/{educationId}")
-    public ResponseEntity<Boolean> deleteCandidateEducation(@PathVariable("educationId") String educationId) {
+    public ResponseEntity<Boolean> deleteCandidateEducation(
+            @PathVariable("id") Long candidateId,
+            @PathVariable("educationId") String educationId) {
         educationService.deleteEducation(educationId);
         return ResponseEntity.ok(true);
     }

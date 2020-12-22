@@ -8,14 +8,14 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RepositoryRestResource(collectionResourceRel = "educationNode", path = "education_node")
 public interface EducationNodeRepository  extends Neo4jRepository<EducationNode, Long> {
 
-    @Query("MATCH (e:ExperienceNode) <- [r:EDUCATION]-(c:CandidateNode) WHERE ID(c) = $id RETURN e")
-    List<EducationNode> findCandidateEducation(Long id);
+    @Query("MATCH (e:EducationNode)<-[r:EDUCATION]-(c:CandidateNode) WHERE c.entity_id = $id RETURN e")
+    Set<EducationNode> findCandidateEducation(Long id);
 
     @Transactional
     public default void deleteById(Long id) {

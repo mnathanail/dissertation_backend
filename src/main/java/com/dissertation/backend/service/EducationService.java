@@ -22,7 +22,7 @@ public class EducationService {
     private final EducationNodeRepository educationNodeRepository;
 
     /**
-     * @param education - EducationNode Obj
+     * @param education   - EducationNode Obj
      * @param candidateId - Candidate Id
      * @return EducationNode | notfound
      */
@@ -32,7 +32,7 @@ public class EducationService {
             education.setEducationId(UUID.randomUUID().toString());
             EducationNode edu = educationNodeRepository.save(education);
             String educationId = edu.getEducationId();
-            candidateNodeRepository.createRelationCandidateExperience(candidateId, educationId);
+            candidateNodeRepository.createRelationCandidateEducation(candidateId, educationId);
 
             return edu;
         } else {
@@ -53,10 +53,13 @@ public class EducationService {
      * @param candidateId - Candidate Id
      * @return educationNode List | empty list
      */
-    public List<EducationNode> getListEducation(Long candidateId) {
-        List<EducationNode> educationNodeList =
-                educationNodeRepository.findCandidateEducation(candidateId);
-        return educationNodeList;
+    public Set<EducationNode> getListEducation(Long candidateId) {
+        Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+        if (cn.isPresent()) {
+            return cn.get().getEducationNodes();
+        } else {
+            throw new NotFoundException();
+        }
     }
 
     /**
@@ -72,13 +75,13 @@ public class EducationService {
     }
 
     /**
-     * @param educationId - Id
+     * @param educationId    - Id
      * @param educationParam - education parameter
      * @return educationNode
      */
     public EducationNode patchEducation(String educationId, EducationNode educationParam) {
         Optional<EducationNode> edu = educationNodeRepository.findByEducationId(educationId);
-        if(edu.isPresent()){
+        if (edu.isPresent()) {
             EducationNode education = edu.get();
 
             // experience = updateExperience(experienceParam, experience);
@@ -87,32 +90,31 @@ public class EducationService {
 
             System.out.println(education);
             EducationNode updatedEducation = educationNodeRepository.save(education);
-            return  updatedEducation;
-        }
-        else {
+            return updatedEducation;
+        } else {
             return edu.orElseThrow(ArithmeticException::new);
         }
     }
 
     private EducationNode updateExperience(EducationNode educationNode, EducationNode education) {
-        if(educationNode.getTitle()!= null){
+        if (educationNode.getTitle() != null) {
             education.setTitle(educationNode.getTitle());
         }
-        if(educationNode.getDegree()!= null){
+        if (educationNode.getDegree() != null) {
             education.setDegree(educationNode.getDegree());
         }
-        if(educationNode.getSchool()!= null){
+        if (educationNode.getSchool() != null) {
             education.setSchool(educationNode.getSchool());
         }
         return education;
     }
 
-    public  String[] getNullPropertyNames (Object source) {
+    public String[] getNullPropertyNames(Object source) {
         final BeanWrapper src = new BeanWrapperImpl(source);
         java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
 
         Set<String> emptyNames = new HashSet<>();
-        for(java.beans.PropertyDescriptor pd : pds) {
+        for (java.beans.PropertyDescriptor pd : pds) {
             Object srcValue = src.getPropertyValue(pd.getName());
             if (srcValue == null) emptyNames.add(pd.getName());
         }

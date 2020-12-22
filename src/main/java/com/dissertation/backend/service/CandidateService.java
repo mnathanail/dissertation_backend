@@ -2,7 +2,6 @@ package com.dissertation.backend.service;
 
 import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.node.CandidateNode;
-import com.dissertation.backend.node.EducationNode;
 import com.dissertation.backend.repository.*;
 import org.springframework.stereotype.Service;
 
@@ -51,11 +50,11 @@ public class CandidateService {
         return c;
     }
 
-    public EducationNode saveEducation(EducationNode educationNode) {
+/*    public EducationNode saveEducation(EducationNode educationNode) {
         EducationNode edu = educationNodeRepository.save(educationNode);
         candidateNodeRepository.createRelationCandidateEducation(4L, 1L);
         return edu;
-    }
+    }*/
 
     public Candidate savePhotoProfile(byte[] profilePic){
         Optional<Candidate> c = candidateRepository.findById(1L);
