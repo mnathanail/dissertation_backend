@@ -32,18 +32,17 @@ public class CandidateNode implements Serializable {
     @Property(name="working_years")
     private Long working_years;
 
-/*
-    @Relationship(type = "APPLIED_FOR", direction = Relationship.Direction.OUTGOING)
-    private List<JobNode> jobNodes;*/
-
     @Relationship(type = "EDUCATION", direction = Relationship.Direction.OUTGOING)
     private Set<EducationNode> educationNodes;
+
+    @Relationship(type = "EXPERIENCE", direction = Relationship.Direction.OUTGOING)
+    private Set<ExperienceNode> experienceNodes = new HashSet<>();
 
     @Relationship(type = "KNOWS", direction = Relationship.Direction.OUTGOING)
     private Set<CandidateSkillRelationship> candidateSkillRelationships = new HashSet<>();
 
-    @Relationship(type = "EXPERIENCE", direction = Relationship.Direction.OUTGOING)
-    private Set<ExperienceNode> experienceNodes = new HashSet<>();
+    @Relationship(type = "APPLIED_FOR", direction = Relationship.Direction.OUTGOING)
+    private Set<CandidateAppliedForJob> jobNodes;
 
 /*    @Relationship(type = "KNOWS", direction = Relationship.Direction.OUTGOING)
     private Set<SkillNode> candidateAndSkills = new HashSet<>();*/

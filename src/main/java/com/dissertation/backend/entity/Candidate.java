@@ -1,13 +1,11 @@
 package com.dissertation.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.Set;
 
 @Entity
 @Table(name = "candidate")
@@ -16,8 +14,6 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Candidate implements Serializable {
-
-    private static final long serialVersionUID = 1L;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +33,6 @@ public class Candidate implements Serializable {
     private byte[] profilePic;
 
     @Column(name = "password", nullable = false)
-    @JsonIgnore
     private String password;
 
 /*    @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL)
@@ -49,4 +44,16 @@ public class Candidate implements Serializable {
     @JsonIgnore
     private Summary summary;
 
+    @ManyToMany(fetch = FetchType.LAZY, cascade =
+                {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH}
+            )
+    @JoinTable(
+            name="candidate_roles", joinColumns = {
+                    @JoinColumn(name = "candidate_id"),
+            },
+            inverseJoinColumns = {
+                    @JoinColumn(name = "role_id")
+            }
+    )
+    private Set<Role> roles;
 }

@@ -1,32 +1,35 @@
 package com.dissertation.backend.node;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import lombok.Data;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.schema.Relationship;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.*;
 
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
-
+import java.util.HashSet;
+import java.util.Set;
 
 @Node
-@Data
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
 public class RecruiterNode implements Serializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @JsonSerialize
+    @Id @GeneratedValue
     private Long id;
+
+    @Property(name = "entity_id")
+    private Long entityId;
+
+    @Property(name = "recruiter_id")
+    private String recruiterId;
 
     @Property(name = "name")
     private String name;
 
     @Relationship(type = "MANAGES", direction = Relationship.Direction.OUTGOING )
-    private List<JobNode> jobNodeAdvertisements = new ArrayList<>();
+    private Set<JobNode> jobNodeAdvertisements = new HashSet<>();
 
 }

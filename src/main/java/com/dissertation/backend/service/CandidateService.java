@@ -5,6 +5,7 @@ import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.repository.*;
 import org.springframework.stereotype.Service;
 
+import javax.ws.rs.NotFoundException;
 import java.util.Optional;
 
 @Service
@@ -40,9 +41,14 @@ public class CandidateService {
         return save.getId() != null;
     }
 
-    public Long checkIfUserExists(String email, String password) {
+    public Candidate checkIfUserExists(String email, String password) {
         Optional<Candidate> candidate = candidateRepository.findCandidateByEmailAndPassword(email, password);
-        return candidate.map(Candidate::getId).orElse(null);
+        return candidate.orElseThrow(NotFoundException::new);
+    }
+
+    public Candidate findByEmail(String email) {
+        Optional<Candidate> candidate = candidateRepository.findCandidateByEmail(email);
+        return candidate.orElseThrow(NotFoundException:: new);
     }
 
     public CandidateNode saveOrUpdateCandidate(CandidateNode candidateNode) {

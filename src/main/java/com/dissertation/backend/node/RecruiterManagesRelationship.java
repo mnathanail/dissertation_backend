@@ -2,21 +2,20 @@ package com.dissertation.backend.node;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
 
-//@RelationshipEntity
+
 @Getter
 @Setter
+@RelationshipProperties
 public class RecruiterManagesRelationship {
 
-  //  @StartNode
-    RecruiterNode recruiterNode;
-  //  @EndNode
-    JobNode jobNode;
+    @TargetNode
+    private JobNode jobNode;
 
-    public RecruiterManagesRelationship(RecruiterNode recruiterNode, JobNode jobNode){
-        this.recruiterNode = recruiterNode;
+    public RecruiterManagesRelationship(JobNode jobNode) {
         this.jobNode = jobNode;
-
-        this.recruiterNode.getJobNodeAdvertisements().add(this.jobNode);
     }
+
 }

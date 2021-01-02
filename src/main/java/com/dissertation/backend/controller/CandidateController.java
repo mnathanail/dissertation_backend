@@ -3,15 +3,15 @@ package com.dissertation.backend.controller;
 import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.entity.Skill;
 import com.dissertation.backend.entity.Summary;
-import com.dissertation.backend.model.Login;
-import com.dissertation.backend.node.*;
-import com.dissertation.backend.projection.CandidateNoPassword;
+import com.dissertation.backend.node.CandidateSkillRelationship;
+import com.dissertation.backend.node.EducationNode;
+import com.dissertation.backend.node.ExperienceNode;
+import com.dissertation.backend.node.GeneralSkillNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
 import com.dissertation.backend.repository.CandidateRepository;
 import com.dissertation.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,11 +34,6 @@ public class CandidateController {
     private final SkillService skillService;
     private final CandidateNodeRepository candidateNodeRepository;
 
-    @GetMapping(value = "/lalak")
-    public ResponseEntity<List<CandidateNoPassword>> getCandidateNoPassword() {
-        return ResponseEntity.status(HttpStatus.OK).body(candidateRepository.findAllBy());
-    }
-
 /*    @PostMapping(value="/register")
     public ResponseEntity<Boolean> register(@RequestBody CandidateNode candidate){
         O isRegistered = candidateService.saveCandidate(candidate);
@@ -49,11 +44,16 @@ public class CandidateController {
     }*/
 
     @PostMapping(value = "/candidate/login")
-    public ResponseEntity<Long> login(@RequestBody Login credentials) {
-        Long exists = candidateService.checkIfUserExists(credentials.getUsername(), credentials.getPassword());
+    public ResponseEntity<Candidate> login(@RequestParam Candidate candidate) {
+        Candidate exists = candidateService.checkIfUserExists(candidate.getEmail(), candidate.getPassword());
         return ResponseEntity.ok(exists);
     }
 
+    @GetMapping(value = "/find-by-email")
+    public ResponseEntity<Candidate> findByEmail(@RequestParam("email") String email) {
+        Candidate candidate = candidateService.findByEmail(email);
+        return ResponseEntity.ok(candidate);
+    }
 
     /**
      * @param id - Long
@@ -79,7 +79,7 @@ public class CandidateController {
 
     /**
      * @param summary
-     * @return
+     * @return ResponseEntity<Summary>
      */
     @PostMapping(value = "/{id}/save/summary")
     public ResponseEntity<Summary> setCandidateSummary(@RequestBody Summary summary) {
@@ -89,7 +89,7 @@ public class CandidateController {
 
     /**
      * @param id
-     * @return
+     * @return ResponseEntity<Summary>
      */
     @GetMapping(value = "/{id}/get/summary")
     public ResponseEntity<Summary> getCandidateSummary(@PathVariable("id") String id) {
@@ -100,7 +100,7 @@ public class CandidateController {
 
     /**
      * @param experienceNode
-     * @return
+     * @return ResponseEntity<ExperienceNode>
      */
     @PostMapping(value = "/{id}/save/working-experience")
     public ResponseEntity<ExperienceNode> setCandidateWorkExperience(
@@ -112,7 +112,7 @@ public class CandidateController {
 
     /**
      * @param candidateId
-     * @return
+     * @return ResponseEntity<ExperienceNode>
      */
     @GetMapping(value = "/{id}/get/working-experience/{experienceId}")
     public ResponseEntity<ExperienceNode> getCandidateWorkExperience(
@@ -124,7 +124,7 @@ public class CandidateController {
 
     /**
      * @param candidateId
-     * @return
+     * @return ResponseEntity<List<ExperienceNode>>
      */
     @GetMapping(value = "/{id}/get/working-experience")
     public ResponseEntity<List<ExperienceNode>> getCandidateWorkExperienceList(
@@ -135,7 +135,7 @@ public class CandidateController {
 
     /**
      * @param experienceId
-     * @return
+     * @return ResponseEntity<ExperienceNode>
      */
     @PatchMapping(value = "/{id}/patch/working-experience/{experienceId}")
     public ResponseEntity<ExperienceNode> patchCandidateWorkExperience(
@@ -149,7 +149,7 @@ public class CandidateController {
 
     /**
      * @param experienceId
-     * @return
+     * @return ResponseEntity<Boolean>
      */
     @DeleteMapping(value = "/{id}/delete/working-experience/{experienceId}")
     public ResponseEntity<Boolean> deleteExperienceByExperienceId(@PathVariable("experienceId") String experienceId) {
@@ -163,7 +163,7 @@ public class CandidateController {
 
     /**
      * @param educationNode
-     * @return
+     * @return ResponseEntity<EducationNode>
      */
     @PostMapping(value = "/{id}/save/education")
     public ResponseEntity<EducationNode> setCandidateEducation(
@@ -175,7 +175,7 @@ public class CandidateController {
 
     /**
      * @param candidateId
-     * @return
+     * @return ResponseEntity<EducationNode>
      */
     @GetMapping(value = "/{id}/get/education/{educationId}")
     public ResponseEntity<EducationNode> getCandidateEducation(
@@ -187,7 +187,7 @@ public class CandidateController {
 
     /**
      * @param candidateId
-     * @return
+     * @return ResponseEntity<Set<EducationNode>>
      */
     @GetMapping(value = "/{id}/get/education")
     public ResponseEntity<Set<EducationNode>> getCandidateEducationList(@PathVariable("id") Long candidateId) {
@@ -197,7 +197,7 @@ public class CandidateController {
 
     /**
      * @param educationId
-     * @return
+     * @return ResponseEntity<EducationNode>
      */
     @PatchMapping(value = "/{id}/patch/education/{educationId}")
     public ResponseEntity<EducationNode> patchCandidateEducation(
@@ -211,7 +211,7 @@ public class CandidateController {
 
     /**
      * @param educationId
-     * @return
+     * @return ResponseEntity<Boolean>
      */
     @DeleteMapping(value = "/{id}/delete/education/{educationId}")
     public ResponseEntity<Boolean> deleteCandidateEducation(
@@ -227,7 +227,7 @@ public class CandidateController {
 
     /**
      * @param skill - String
-     * @return Response Entity
+     * @return ResponseEntity<List<Skill>>
      */
     @GetMapping("/{id}/get/search/skill-list")
     public ResponseEntity<List<Skill>> getSearchSkill(@PathVariable("id") Long candidateId,
@@ -238,7 +238,7 @@ public class CandidateController {
 
     /**
      * @param candidateId - Long
-     * @return Response Entity
+     * @return ResponseEntity<Set<CandidateSkillRelationship>>
      */
     @GetMapping("/{id}/get/candidate-skill-list")
     public ResponseEntity<Set<CandidateSkillRelationship>> getCandidateSkillList(@PathVariable("id") Long candidateId) {
@@ -289,32 +289,4 @@ public class CandidateController {
 
     /*---------------------------/Skill-------------------------------------------------------------------------------*/
 
-
-
-
-
-
-
-
-
-/*    @GetMapping(value = CustomLinks.DTOS)
-    public ResponseEntity<?> getDtos() {
-        List<CandidateNoPassword> dtos = candidateRepository.getDtos();
-
-        Link listSelfLink = links.linkFor(Candidate.class).slash(CustomLinks.DTOS).withSelfRel();
-        List<?> resources = dtos.stream().map(this::toResource).collect(Collectors.toList());
-
-        return ResponseEntity.ok(new CollectionModel<>(resources, listSelfLink));
-    }
-
-    private RepresentationModel toResource(CandidateNoPassword projection) {
-        CandidateDto dto = new CandidateDto(projection.getId(), projection.getName(), projection.getSurname(), projection.getEmail(), projection.getProfilePic());
-
-        Link categoryLink = links.linkFor(Candidate.class).slash(projection.getId()).withRel("candidate");
-        Link selfLink = links.linkFor(Candidate.class).slash(CustomLinks.DTOS).withSelfRel();
-
-        return new EntityModel<CandidateDto>(dto, categoryLink, selfLink);
-    }
-
-    */
 }

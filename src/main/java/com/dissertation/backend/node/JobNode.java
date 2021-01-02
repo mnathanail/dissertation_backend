@@ -4,12 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.Node;
-import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.*;
 
 import java.io.Serializable;
+import java.util.Set;
 
 @Node
 @Getter
@@ -22,15 +20,16 @@ public class JobNode implements Serializable {
     @JsonSerialize
     private Long id;
 
-    @Property(name="title")
-    private String title;
+    @Property(name="job_id")
+    private String jobId;
+
+    @Property(name="job_title")
+    private String jobTitle;
 
     @Property(name="description")
     private String description;
 
-/*
     @Relationship(type = "REQUIRES", direction = Relationship.Direction.OUTGOING)
-    private List<Skill> requiredSkills = new ArrayList<>();
-*/
+    private Set<JobRequiresRelationship> requiredSkills;
 
 }
