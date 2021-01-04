@@ -35,11 +35,6 @@ public class Candidate implements Serializable {
     @Column(name = "password", nullable = false)
     private String password;
 
-/*    @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL)
-    @PrimaryKeyJoinColumn
-    @JsonIgnore
-    private Summary summary;*/
-
     @OneToOne(mappedBy = "candidate", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private Summary summary;
@@ -55,5 +50,5 @@ public class Candidate implements Serializable {
                     @JoinColumn(name = "role_id")
             }
     )
-    private Set<Role> roles;
+    private Set<Role> authorities;
 }
