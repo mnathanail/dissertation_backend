@@ -2,10 +2,11 @@ package com.dissertation.backend.node;
 
 import com.dissertation.backend.node.converters.PeriodConverter;
 import com.dissertation.backend.node.shared.Period;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
+
+import javax.validation.constraints.NotEmpty;
 
 @Node
 @Getter
@@ -16,23 +17,21 @@ public class EducationNode {
     @GeneratedValue
     private Long id;
 
-    @JsonProperty("educationId")
     @Property(name = "education_id")
     public String educationId;
 
-    @JsonProperty("title")
+    @NotEmpty(message = "Title is required")
     @Property(name="title")
     private String title;
 
-    @JsonProperty("degree")
+    @NotEmpty(message = "Degree is required")
     @Property(name="degree")
     private String degree;
 
-    @JsonProperty("school")
+    @NotEmpty(message = "School is required")
     @Property(name="school")
     private String school;
 
-    @JsonProperty("period")
     @CompositeProperty(converter = PeriodConverter.class)
     private Period period;
 

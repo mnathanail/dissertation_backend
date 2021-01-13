@@ -4,14 +4,11 @@ import com.dissertation.backend.node.CandidateNode;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Optional;
 
 @RepositoryRestResource(collectionResourceRel = "candidateNode", path = "candidate_node")
 public interface CandidateNodeRepository extends Neo4jRepository<CandidateNode, Long> {
-
-    CandidateNode getCandidateNodeByName(@RequestParam("name") String name);
 
     Optional<CandidateNode> findCandidateNodeByEntityId(Long entity_id);
 
@@ -24,15 +21,5 @@ public interface CandidateNodeRepository extends Neo4jRepository<CandidateNode, 
             "(e:EducationNode {education_id: $edu_id})" +
             "MERGE (c)-[r:EDUCATION]->(e);")
     void createRelationCandidateEducation(Long candidate_id, String edu_id);
-
-
-/*
-    @Query("MATCH (c:CandidateNode)-[:KNOWS]-> (:Skill{name:'PHP'}) RETURN c")
-    List<CandidateNode> salalala();
-*/
-
-
-
-
 
 }

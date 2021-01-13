@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -23,14 +25,20 @@ public class CandidateNode implements Serializable {
     @Property(name = "entity_id")
     private Long entityId;
 
+    @NotEmpty(message = "Name is required")
     @Property(name="name")
     private String name;
 
+    @Email
+    @NotEmpty(message = "Email is required")
     @Property(name="email")
     private String email;
 
+    @Property(name = "candidate_id")
+    private String candidateId;
+
     @Property(name="working_years")
-    private Long working_years;
+    private Long workingYears;
 
     @Relationship(type = "EDUCATION", direction = Relationship.Direction.OUTGOING)
     private Set<EducationNode> educationNodes;
@@ -43,8 +51,5 @@ public class CandidateNode implements Serializable {
 
     @Relationship(type = "APPLIED_FOR", direction = Relationship.Direction.OUTGOING)
     private Set<CandidateAppliedForJob> jobNodes;
-
-/*    @Relationship(type = "KNOWS", direction = Relationship.Direction.OUTGOING)
-    private Set<SkillNode> candidateAndSkills = new HashSet<>();*/
 
 }

@@ -34,33 +34,4 @@ public class PeriodConverter implements Neo4jPersistentPropertyToMapConverter<St
                     );
 
     }
-
-
 }
-
-
-/*
-    @Override
-    public Object compose(Map source, Neo4jConversionService neo4jConversionService) {
-        String startYear = (String) source.get("startYear");
-        String startMonth = (String) source.get("startMonth");
-        String endYear = (String) source.get("endYear");
-        String endMonth = (String) source.get("endMonth");
-
-        if (startYear != null && startMonth != null && endYear != null && endMonth != null) {
-            return new Period(startYear, startMonth, endYear, endMonth);
-        }
-        return null;
-    }
-
-    @Override
-    public Map<Period, Value> decompose(String property, Neo4jConversionService neo4jConversionService) {
-        Map<Period, Value> properties = new HashMap<>();
-        //Period period = (Period) property;
-        properties.put("startYear",  );
-        properties.put("startMonth", period.getStartMonth());
-        properties.put("endYear",    period.getEndYear());
-        properties.put("endMonth",   period.getEndMonth());
-        return properties;
-    }
- */

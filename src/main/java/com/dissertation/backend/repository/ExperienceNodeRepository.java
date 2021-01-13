@@ -29,15 +29,6 @@ public interface ExperienceNodeRepository  extends Neo4jRepository<ExperienceNod
     @Query("MATCH (e:ExperienceNode) WHERE e.experience_id = $experienceId DETACH DELETE e;")
     ExperienceNode deleteExperienceNodeByExperienceIdCustom(String experienceId);
 
-
     Optional<ExperienceNode> findByExperienceId(String experienceId);
 
-/*
-     ExperienceNode save(@NotNull ExperienceNode experience);
-
-     ExperienceNode findById(String companyName);
-*/
-
-
-     // @Query("MATCH (e:EXPERIENCE)-[:HAS_EXPERIENCE]-> (:Skill{name:'PHP'}) RETURN c")
 }

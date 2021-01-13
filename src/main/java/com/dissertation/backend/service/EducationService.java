@@ -1,5 +1,6 @@
 package com.dissertation.backend.service;
 
+import com.dissertation.backend.exception.custom.education_exception.EducationNotFoundException;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.EducationNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
@@ -46,7 +47,8 @@ public class EducationService {
      */
     public EducationNode getEducation(String educationId) {
         Optional<EducationNode> edu = educationNodeRepository.findByEducationId(educationId);
-        return edu.orElseThrow(ArithmeticException::new);
+
+        return edu.orElseThrow(()-> new EducationNotFoundException("Education not found " + educationId));
     }
 
     /**
@@ -55,11 +57,7 @@ public class EducationService {
      */
     public Set<EducationNode> getListEducation(Long candidateId) {
         Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
-        if (cn.isPresent()) {
-            return cn.get().getEducationNodes();
-        } else {
-            throw new NotFoundException();
-        }
+        return cn.map(CandidateNode::getEducationNodes).orElse(null);
     }
 
     /**
@@ -83,16 +81,12 @@ public class EducationService {
         Optional<EducationNode> edu = educationNodeRepository.findByEducationId(educationId);
         if (edu.isPresent()) {
             EducationNode education = edu.get();
-
             // experience = updateExperience(experienceParam, experience);
-
             BeanUtils.copyProperties(educationParam, education, getNullPropertyNames(educationParam));
-
-            System.out.println(education);
             EducationNode updatedEducation = educationNodeRepository.save(education);
             return updatedEducation;
         } else {
-            return edu.orElseThrow(ArithmeticException::new);
+            throw new EducationNotFoundException("Education not found " + educationId);
         }
     }
 

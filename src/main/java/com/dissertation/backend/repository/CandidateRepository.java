@@ -12,15 +12,8 @@ import java.util.Optional;
 @RepositoryRestResource(collectionResourceRel = "candidate", path = "candidate")
 public interface CandidateRepository extends JpaRepository<Candidate, Long>, JpaSpecificationExecutor<Candidate> {
 
-   // boolean existsByEmailAndPassword(String email, String password);
-
     Optional<Candidate> findCandidateByEmailAndPassword(String email, String password);
 
     Optional<Candidate> findCandidateByEmail(String email);
-
-    Candidate findCandidateNameSurnameEmailById(Long id);
-
-    Candidate findBySurname(String surname);
-
 
 }

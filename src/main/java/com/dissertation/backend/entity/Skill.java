@@ -3,6 +3,7 @@ package com.dissertation.backend.entity;
 import lombok.Data;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 
 @Entity
@@ -17,6 +18,7 @@ public class Skill implements Serializable {
     @Column(name = "id", nullable = false)
     private Long id;
 
+    @NotEmpty(message = "Skill is required")
     @Column(name = "name")
     private String name;
 

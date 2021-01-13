@@ -5,19 +5,23 @@ import com.dissertation.backend.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 @RepositoryRestController
 
 @RequestMapping("/recruiter")
 @CrossOrigin("http://localhost:4300")
 @RequiredArgsConstructor
+@Validated
 public class RecruiterController {
 
     private final JobService jobService;
 
     @PostMapping("/{id}/save/job")
-    public ResponseEntity<JobNode> saveJob(@PathVariable("id") Long id, @RequestBody JobNode jobNode){
+    public ResponseEntity<JobNode> saveJob(@PathVariable("id") Long id, @Valid @RequestBody JobNode jobNode){
         JobNode jn = jobService.setJob(id, jobNode);
         return ResponseEntity.ok(jn);
     }
@@ -25,7 +29,7 @@ public class RecruiterController {
     @PatchMapping("/{recruiterId}/patch/job/{jobId}")
     public ResponseEntity<JobNode> saveJob(
             @PathVariable("recruiterId") Long id,
-            @RequestBody JobNode jobNode,
+            @Valid @RequestBody JobNode jobNode,
             @PathVariable("jobId") String jobId ){
         JobNode jn = jobService.updateJob(jobId, jobNode);
         return ResponseEntity.ok(jn);

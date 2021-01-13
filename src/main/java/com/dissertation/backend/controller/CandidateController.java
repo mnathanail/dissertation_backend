@@ -13,16 +13,19 @@ import com.dissertation.backend.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Email;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @RepositoryRestController
-
 @RequestMapping("/candidate")
-@CrossOrigin("http://localhost:4300")
 @RequiredArgsConstructor
+@Validated
 public class CandidateController {
 
     private final CandidateService candidateService;
@@ -34,36 +37,33 @@ public class CandidateController {
     private final SkillService skillService;
     private final CandidateNodeRepository candidateNodeRepository;
 
-/*    @PostMapping(value="/register")
-    public ResponseEntity<Boolean> register(@RequestBody CandidateNode candidate){
-        O isRegistered = candidateService.saveCandidate(candidate);
-
-//        Link categoryLink = links.linkFor(CandidateNode.class).slash("search/save").withRel("candidate");
-//        Link selfLink = links.linkFor(CandidateNode.class).slash("search/save").withSelfRel();
-        return ResponseEntity.ok(isRegistered);
-    }*/
-
     @PostMapping(value = "/candidate/login")
-    public ResponseEntity<Candidate> login(@RequestParam Candidate candidate) {
+    public ResponseEntity<Candidate> login(@Valid @RequestParam Candidate candidate) {
         Candidate exists = candidateService.checkIfUserExists(candidate.getEmail(), candidate.getPassword());
         return ResponseEntity.ok(exists);
     }
 
+    @PostMapping(value = "/register")
+    public ResponseEntity<Candidate> register(@Valid @RequestParam Candidate candidate) {
+        Candidate c = candidateService.register(candidate);
+        return ResponseEntity.ok(c);
+    }
+
     @GetMapping(value = "/find-by-email")
-    public ResponseEntity<Candidate> findByEmail(@RequestParam("email") String email) {
+    public ResponseEntity<Candidate> findByEmail(@Email @RequestParam("email") String email) {
         Candidate candidate = candidateService.findByEmail(email);
         return ResponseEntity.ok(candidate);
     }
 
     /**
-     * @param id - Long
+     * @param candidateId - Long
      * @param candidate - Candidate Obj
      * @return
      */
-    @PostMapping(value = "/{id}/save/photo-profile")
-    public ResponseEntity<Candidate> setCandidatePhotoProfile(@PathVariable("id") Long id,
+    @PostMapping(value = "/{candidateId}/save/photo-profile")
+    public ResponseEntity<Candidate> setCandidatePhotoProfile(@PathVariable("candidateId") Long candidateId,
             @RequestBody Candidate candidate){
-        Candidate c = candidateService.savePhotoProfile(candidate.getProfilePic());
+        Candidate c = candidateService.savePhotoProfile(candidateId, candidate.getProfilePic());
         return ResponseEntity.ok(c);
     }
 
@@ -71,8 +71,8 @@ public class CandidateController {
      * @param id - Long
      * @return
      */
-    @GetMapping(value = "/{id}/get/profile")
-    public ResponseEntity<Candidate> getCandidateProfile(@PathVariable("id") Long id){
+    @GetMapping(value = "/{candidateId}/get/profile")
+    public ResponseEntity<Candidate> getCandidateProfile(@PathVariable("candidateId") Long id){
         Candidate c = candidateService.getProfile(id);
         return ResponseEntity.ok(c);
     }
@@ -81,9 +81,10 @@ public class CandidateController {
      * @param summary
      * @return ResponseEntity<Summary>
      */
-    @PostMapping(value = "/{id}/save/summary")
-    public ResponseEntity<Summary> setCandidateSummary(@RequestBody Summary summary) {
-        Summary sum = summaryService.saveSummary(summary);
+    @PostMapping(value = "/{candidateId}/save/summary")
+    public ResponseEntity<Summary> setCandidateSummary(@PathVariable("candidateId") Long id,
+                                                       @RequestBody Summary summary) {
+        Summary sum = summaryService.saveSummary(id, summary);
         return ResponseEntity.ok(sum);
     }
 
@@ -91,9 +92,9 @@ public class CandidateController {
      * @param id
      * @return ResponseEntity<Summary>
      */
-    @GetMapping(value = "/{id}/get/summary")
-    public ResponseEntity<Summary> getCandidateSummary(@PathVariable("id") String id) {
-        Summary sum = summaryService.getSummary(Long.parseLong(id));
+    @GetMapping(value = "/{candidateId}/get/summary")
+    public ResponseEntity<Optional<Summary>> getCandidateSummary(@PathVariable("candidateId") String id) {
+        Optional<Summary> sum = summaryService.getSummary(Long.parseLong(id));
         return ResponseEntity.ok(sum);
     }
     /*----------------------------Experience--------------------------------------------------------------------------*/
@@ -102,10 +103,10 @@ public class CandidateController {
      * @param experienceNode
      * @return ResponseEntity<ExperienceNode>
      */
-    @PostMapping(value = "/{id}/save/working-experience")
+    @PostMapping(value = "/{candidateId}/save/working-experience")
     public ResponseEntity<ExperienceNode> setCandidateWorkExperience(
-            @RequestBody ExperienceNode experienceNode,
-            @PathVariable("id") Long id) {
+            @Valid @RequestBody ExperienceNode experienceNode,
+            @PathVariable("candidateId") Long id) {
         ExperienceNode exp = experienceService.setExperience(experienceNode, id);
         return ResponseEntity.ok(exp);
     }
@@ -114,9 +115,9 @@ public class CandidateController {
      * @param candidateId
      * @return ResponseEntity<ExperienceNode>
      */
-    @GetMapping(value = "/{id}/get/working-experience/{experienceId}")
+    @GetMapping(value = "/{candidateId}/get/working-experience/{experienceId}")
     public ResponseEntity<ExperienceNode> getCandidateWorkExperience(
-            @PathVariable("id") String candidateId,
+            @PathVariable("candidateId") String candidateId,
             @PathVariable("experienceId") String experienceId) {
         ExperienceNode exp = experienceService.getExperience(experienceId);
         return ResponseEntity.ok(exp);
@@ -126,9 +127,9 @@ public class CandidateController {
      * @param candidateId
      * @return ResponseEntity<List<ExperienceNode>>
      */
-    @GetMapping(value = "/{id}/get/working-experience")
+    @GetMapping(value = "/{candidateId}/get/working-experience")
     public ResponseEntity<List<ExperienceNode>> getCandidateWorkExperienceList(
-            @PathVariable("id") Long candidateId) {
+            @PathVariable("candidateId") Long candidateId) {
         List<ExperienceNode> exp = experienceService.getListExperience(candidateId);
         return ResponseEntity.ok(exp);
     }
@@ -137,9 +138,9 @@ public class CandidateController {
      * @param experienceId
      * @return ResponseEntity<ExperienceNode>
      */
-    @PatchMapping(value = "/{id}/patch/working-experience/{experienceId}")
+    @PatchMapping(value = "/{candidateId}/patch/working-experience/{experienceId}")
     public ResponseEntity<ExperienceNode> patchCandidateWorkExperience(
-            @PathVariable("id") Long candidateId,
+            @PathVariable("candidateId") Long candidateId,
             @PathVariable("experienceId") String experienceId,
             @RequestBody ExperienceNode experienceNode) {
 
@@ -153,7 +154,7 @@ public class CandidateController {
      */
     @DeleteMapping(value = "/{id}/delete/working-experience/{experienceId}")
     public ResponseEntity<Boolean> deleteExperienceByExperienceId(@PathVariable("experienceId") String experienceId) {
-        Boolean deleteExperienceNode = experienceService.deleteExperience(experienceId);
+        boolean deleteExperienceNode = experienceService.deleteExperience(experienceId);
         return ResponseEntity.ok(!deleteExperienceNode);
     }
 
@@ -165,10 +166,10 @@ public class CandidateController {
      * @param educationNode
      * @return ResponseEntity<EducationNode>
      */
-    @PostMapping(value = "/{id}/save/education")
+    @PostMapping(value = "/{candidateId}/save/education")
     public ResponseEntity<EducationNode> setCandidateEducation(
-            @RequestBody EducationNode educationNode,
-            @PathVariable("id") Long id) {
+            @Valid @RequestBody EducationNode educationNode,
+            @PathVariable("candidateId") Long id) {
         EducationNode ed = educationService.setEducation(educationNode, id);
         return ResponseEntity.ok(ed);
     }
@@ -177,9 +178,9 @@ public class CandidateController {
      * @param candidateId
      * @return ResponseEntity<EducationNode>
      */
-    @GetMapping(value = "/{id}/get/education/{educationId}")
+    @GetMapping(value = "/{candidateId}/get/education/{educationId}")
     public ResponseEntity<EducationNode> getCandidateEducation(
-            @PathVariable("id") String candidateId,
+            @PathVariable("candidateId") String candidateId,
             @PathVariable("educationId") String educationId) {
         EducationNode ed = educationService.getEducation(educationId);
         return ResponseEntity.ok(ed);
@@ -189,8 +190,8 @@ public class CandidateController {
      * @param candidateId
      * @return ResponseEntity<Set<EducationNode>>
      */
-    @GetMapping(value = "/{id}/get/education")
-    public ResponseEntity<Set<EducationNode>> getCandidateEducationList(@PathVariable("id") Long candidateId) {
+    @GetMapping(value = "/{candidateId}/get/education")
+    public ResponseEntity<Set<EducationNode>> getCandidateEducationList(@PathVariable("candidateId") Long candidateId) {
         Set<EducationNode> ed = educationService.getListEducation(candidateId);
         return ResponseEntity.ok(ed);
     }
@@ -199,9 +200,9 @@ public class CandidateController {
      * @param educationId
      * @return ResponseEntity<EducationNode>
      */
-    @PatchMapping(value = "/{id}/patch/education/{educationId}")
+    @PatchMapping(value = "/{candidateId}/patch/education/{educationId}")
     public ResponseEntity<EducationNode> patchCandidateEducation(
-            @PathVariable("id") Long candidateId,
+            @PathVariable("candidateId") Long candidateId,
             @PathVariable("educationId") String educationId,
             @RequestBody EducationNode educationNode) {
 
@@ -213,35 +214,26 @@ public class CandidateController {
      * @param educationId
      * @return ResponseEntity<Boolean>
      */
-    @DeleteMapping(value = "/{id}/delete/education/{educationId}")
+    @DeleteMapping(value = "/{candidateId}/delete/education/{educationId}")
     public ResponseEntity<Boolean> deleteCandidateEducation(
-            @PathVariable("id") Long candidateId,
+            @PathVariable("candidateId") Long candidateId,
             @PathVariable("educationId") String educationId) {
-        educationService.deleteEducation(educationId);
-        return ResponseEntity.ok(true);
+        boolean deleteEducationNode = educationService.deleteEducation(educationId);
+        return ResponseEntity.ok(!deleteEducationNode);
     }
 
     /*----------------------------/Education--------------------------------------------------------------------------*/
 
     /*----------------------------Skill-------------------------------------------------------------------------------*/
 
-    /**
-     * @param skill - String
-     * @return ResponseEntity<List<Skill>>
-     */
-    @GetMapping("/{id}/get/search/skill-list")
-    public ResponseEntity<List<Skill>> getSearchSkill(@PathVariable("id") Long candidateId,
-                                                      @RequestParam("skill") String skill) {
-        List<Skill> skills = skillService.getSkillLike(skill);
-        return ResponseEntity.ok(skills);
-    }
+
 
     /**
      * @param candidateId - Long
      * @return ResponseEntity<Set<CandidateSkillRelationship>>
      */
-    @GetMapping("/{id}/get/candidate-skill-list")
-    public ResponseEntity<Set<CandidateSkillRelationship>> getCandidateSkillList(@PathVariable("id") Long candidateId) {
+    @GetMapping("/{candidateId}/get/candidate-skill-list")
+    public ResponseEntity<Set<CandidateSkillRelationship>> getCandidateSkillList(@PathVariable("candidateId") Long candidateId) {
         Set<CandidateSkillRelationship> skills = skillService.getCandidateSkillList(candidateId);
         return ResponseEntity.ok(skills);
     }

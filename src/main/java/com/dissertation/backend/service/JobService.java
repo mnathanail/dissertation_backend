@@ -1,5 +1,6 @@
 package com.dissertation.backend.service;
 
+import com.dissertation.backend.exception.custom.job_exception.JobNotFoundException;
 import com.dissertation.backend.node.CandidateAppliedForJob;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.JobNode;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.NotFoundException;
@@ -39,29 +42,26 @@ public class JobService {
             });
 
             this.jobNodeRepository.saveAll(jobNodeSkillRelationship);
-            return this.jobNodeRepository.findByJobId(jobNode.getJobId()).get();
+            Optional<JobNode> jbid = this.jobNodeRepository.findByJobId(jobNode.getJobId());
+            return jbid.orElse(null);
         } else {
-            throw new NotFoundException();
+            return null;
         }
     }
 
     public Set<JobNode> getJobList(Long recruiterId) {
         Optional<RecruiterNode> recruiterNode = this.recruiterNodeRepository.findById(recruiterId);
         if (recruiterNode.isPresent()) {
-            return recruiterNode.get().getJobNodeAdvertisements();
+            return recruiterNode.map(RecruiterNode::getJobNodeAdvertisements).orElse(null);
+            // return recruiterNode.get().getJobNodeAdvertisements();
         } else {
-            throw new NotFoundException();
+            return null;
         }
     }
 
     public JobNode getJobByJobId(String jobId) {
-
         Optional<JobNode> jobNode = this.jobNodeRepository.findByJobId(jobId);
-        if (jobNode.isPresent()) {
-            return jobNode.get();
-        } else {
-            throw new NotFoundException();
-        }
+        return jobNode.orElse(null);
     }
 
     public JobNode updateJob(String jobId, JobNode jobNodeParam) {
@@ -71,7 +71,7 @@ public class JobService {
             BeanUtils.copyProperties(jobNodeParam, job, getNullPropertyNames(jobNodeParam));
             return jobNodeRepository.save(job);
         } else {
-            return jobNode.orElseThrow(ArithmeticException::new);
+            return null;
         }
     }
 
@@ -82,11 +82,11 @@ public class JobService {
         RecruiterNode recruiterNode = this.findRecruiterNodeByEntityId(recruiterId);
         Optional<JobNode> jobNode = jobNodeRepository.findByJobId(jobId);
         if (jobNode.isPresent()) {
-            jobNodeRepository.deleteJobNodeByJobIdCustom(jobId);
+            jobNodeRepository.delete(jobNode.get());
             Optional<JobNode> jobNodeExists = jobNodeRepository.findByJobId(jobId);
             return jobNodeExists.isPresent();
         } else {
-            throw new NotFoundException();
+            return false;
         }
 
     }
@@ -103,17 +103,30 @@ public class JobService {
                     .anyMatch(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(uuid));
         }
         else {
-            throw  new NotFoundException();
+           return false;
         }
     }
 
-    public List<JobNode> candidateSearchJobByKeywords(List<String> keywords){
+    public Page<JobNode> candidateSearchJobByKeywords(List<String> keywords, int page, int size){
         String[] a = keywords.stream().toArray(String[]::new);
 
+        return this.jobNodeRepository.findJobNodeByListOfSkills(keywords.stream().toArray(String[]::new), PageRequest.of(page-1,size));
+              //  PageRequest.of(page, size)).getContent();
+    }
 
-        List<JobNode> takis =
-                this.jobNodeRepository.findJobNodeByListOfSkills(keywords.stream().toArray(String[]::new));
-        return this.jobNodeRepository.findJobNodeByListOfSkills(keywords.stream().toArray(String[]::new));
+    public int countCandidateSearchJobByKeywords(List<String> keywords){
+        String[] a = keywords.stream().toArray(String[]::new);
+        return this.jobNodeRepository.countJobNodeByListOfSkills(keywords.stream().toArray(String[]::new));
+    }
+
+    public RecruiterNode getRecruiterByJobId(String jobId){
+        Optional<JobNode> jobNode = this.jobNodeRepository.findByJobId(jobId);
+        if(jobNode.isPresent()){
+            return this.recruiterNodeRepository.findRecruiterByJobId(jobId);
+        }
+        else{
+            throw new JobNotFoundException("Job did not found " + jobId);
+        }
     }
 
     public String[] getNullPropertyNames(Object source) {

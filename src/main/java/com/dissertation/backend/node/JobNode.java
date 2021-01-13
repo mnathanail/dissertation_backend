@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.*;
 
+import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
 import java.util.Set;
 
@@ -23,9 +24,11 @@ public class JobNode implements Serializable {
     @Property(name="job_id")
     private String jobId;
 
+    @NotEmpty(message = "Job title is required")
     @Property(name="job_title")
     private String jobTitle;
 
+    @NotEmpty(message = "Description is required")
     @Property(name="description")
     private String description;
 

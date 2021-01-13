@@ -1,16 +1,20 @@
 package com.dissertation.backend.controller;
 
 import com.dissertation.backend.node.JobNode;
+import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.service.JobService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RepositoryRestController
 
+@Validated
 @RequestMapping("/job")
 @CrossOrigin("http://localhost:4300")
 @RequiredArgsConstructor
@@ -33,8 +37,21 @@ public class JobController {
     }
 
     @GetMapping("/candidate/search/job/keywords")
-    ResponseEntity<List<JobNode>> getCandidateSearchJobByKeywords(@RequestParam(value = "keywords") List<String> keywords){
-        List<JobNode> jobNodeList = jobService.candidateSearchJobByKeywords(keywords);
+    ResponseEntity<Page<JobNode>> getCandidateSearchJobByKeywords(
+            @RequestParam(value = "keywords") List<String> keywords,
+            @RequestParam(value = "page") int page,
+            @RequestParam(value = "size") int size){
+
+        Page<JobNode> jobNodeList = jobService.candidateSearchJobByKeywords(keywords, page, size);
+
+        final long count = jobService.countCandidateSearchJobByKeywords(keywords);
+        //Page a= new PageImpl(jobNodeList, PageRequest.of(page, size), count);
         return ResponseEntity.ok(jobNodeList);
+    }
+
+    @GetMapping("/get/recruiter/job/{jobId}")
+    ResponseEntity<String> getRecruiterByJobId(@PathVariable("jobId") String jobId){
+        RecruiterNode recruiterNode = jobService.getRecruiterByJobId(jobId);
+        return ResponseEntity.ok(recruiterNode.getRecruiterId());
     }
 }

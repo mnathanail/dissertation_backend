@@ -25,13 +25,11 @@ public class CandidateNodeService {
      */
     public ExperienceNode saveExperience(ExperienceNode experienceNode) {
         ExperienceNode exp = experienceNodeRepository.save(experienceNode);
-        System.out.println(exp);
         return exp;
     }
 
 
-    public CandidateNode
-    saveOrUpdateCandidate(CandidateNode candidateNode) {
+    public CandidateNode  saveOrUpdateCandidate(CandidateNode candidateNode) {
         CandidateNode c = candidateNodeRepository.save(candidateNode);
         return c;
     }

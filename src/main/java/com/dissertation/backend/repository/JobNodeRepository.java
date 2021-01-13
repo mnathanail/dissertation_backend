@@ -1,11 +1,12 @@
 package com.dissertation.backend.repository;
 
 import com.dissertation.backend.node.JobNode;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
-import java.util.List;
 import java.util.Optional;
 
 @RepositoryRestResource(collectionResourceRel = "job", path = "job")
@@ -13,14 +14,17 @@ public interface JobNodeRepository extends Neo4jRepository<JobNode, Long> {
 
     Optional<JobNode> findByJobId(String jobId);
 
-    @Query("MATCH (e:JobNode) WHERE e.job_id = $jobId DETACH DELETE e;")
-    JobNode deleteJobNodeByJobIdCustom(String jobId);
-
-    @Query("MATCH (j:JobNode) -[:REQUIRES]->(s:SkillNode) WHERE  ANY (item IN $list WHERE s.name =~ '(?i)'+item)  " +
+    @Query(value = "MATCH (j:JobNode)-[:REQUIRES]->(s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item) " +
             "WITH j  MATCH (j)-[r:REQUIRES]->(requiredSkills:SkillNode) " +
-            "RETURN j, collect(j), collect(r), collect(requiredSkills)")
-    List<JobNode> findJobNodeByListOfSkills(String[] list);
+            "RETURN j, collect(j), collect(r), collect(requiredSkills) SKIP $skip LIMIT $limit",
+            countQuery =
+            "MATCH (j:JobNode)-[:REQUIRES]->(s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item)  " +
+            "RETURN COUNT(j)")
+    Page<JobNode> findJobNodeByListOfSkills(String[] list, Pageable pageable);
 
+    @Query("MATCH (j:JobNode)-[:REQUIRES]->(s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item)  " +
+            "RETURN COUNT(j)")
+    int countJobNodeByListOfSkills(String[] list);
 
     /*Match (j:JobNode) - [r:REQUIRES] -> (s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item) RETURN *;
     @Query (value="Match (j:JobNode) - [r:REQUIRES] -> (s:SkillNode) WHERE ANY (item IN $list WHERE j.name =~ '(?i)'+item) RETURN j",
