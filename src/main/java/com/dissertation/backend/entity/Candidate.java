@@ -51,7 +51,7 @@ public class Candidate implements Serializable {
     private Summary summary;
 
     @ManyToMany(fetch = FetchType.LAZY, cascade =
-                {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH}
+                 CascadeType.MERGE
             )
     @JoinTable(
             name="candidate_roles", joinColumns = {

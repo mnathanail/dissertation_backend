@@ -36,7 +36,7 @@ public class Role implements Serializable {
             inverseJoinColumns = {
                     @JoinColumn(name = "candidate_id")
             }
-    )*/
+    )
     /*@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "roles")*/
 /*    @Setter
     @Getter(onMethod = @__( @JsonBackReference))

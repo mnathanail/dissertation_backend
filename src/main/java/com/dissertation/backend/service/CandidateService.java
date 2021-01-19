@@ -1,8 +1,8 @@
 package com.dissertation.backend.service;
 
-import com.dissertation.backend.enums.Roles;
 import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.entity.Role;
+import com.dissertation.backend.enums.Roles;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.repository.*;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.NotFoundException;
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -115,7 +114,7 @@ public class CandidateService {
             candidate.setAuthorities(role);
         }
 
-        String uuid = UUID.fromString(candidate.getEmail() + LocalDate.now()).toString();
+        String uuid = UUID.randomUUID().toString();
         candidate.setCandidateId(uuid);
         Candidate c = candidateRepository.save(candidate);
 

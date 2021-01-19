@@ -36,6 +36,22 @@ public class JobController {
         return ResponseEntity.ok(jn);
     }
 
+    @DeleteMapping("/delete/apply/candidate/{candidateId}/job/{jobId}")
+    ResponseEntity<Boolean> deleteApplyForJob(
+            @PathVariable("candidateId") Long candidateId,
+            @PathVariable("jobId") String jobId){
+        Boolean jn = jobService.candidateDeleteApplyForJob(candidateId,jobId);
+        return ResponseEntity.ok(jn);
+    }
+
+    @GetMapping("/already/apply/candidate/{candidateId}/job/{jobId}")
+    ResponseEntity<Boolean> alreadyApplyForJob(
+            @PathVariable("candidateId") Long candidateId,
+            @PathVariable("jobId") String jobId){
+        Boolean jn = jobService.candidateHasAlreadyAppliedForJob(candidateId,jobId);
+        return ResponseEntity.ok(jn);
+    }
+
     @GetMapping("/candidate/search/job/keywords")
     ResponseEntity<Page<JobNode>> getCandidateSearchJobByKeywords(
             @RequestParam(value = "keywords") List<String> keywords,

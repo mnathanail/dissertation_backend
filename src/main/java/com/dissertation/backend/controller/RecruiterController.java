@@ -2,6 +2,7 @@ package com.dissertation.backend.controller;
 
 import com.dissertation.backend.node.JobNode;
 import com.dissertation.backend.service.JobService;
+import com.dissertation.backend.service.RecruiterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.rest.webmvc.RepositoryRestController;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Set;
 
 @RepositoryRestController
 
@@ -19,6 +21,7 @@ import javax.validation.Valid;
 public class RecruiterController {
 
     private final JobService jobService;
+    private final RecruiterService recruiterService;
 
     @PostMapping("/{id}/save/job")
     public ResponseEntity<JobNode> saveJob(@PathVariable("id") Long id, @Valid @RequestBody JobNode jobNode){
@@ -39,6 +42,12 @@ public class RecruiterController {
     public ResponseEntity<Boolean> deleteJob(@PathVariable("recruiterId") Long recruiterId, @PathVariable String jobId){
         Boolean jn = jobService.deleteJob(recruiterId, jobId);
         return ResponseEntity.ok(jn);
+    }
+
+    @GetMapping(value = "/{id}/get/manages-job-list")
+    public ResponseEntity<Set<JobNode>> getAllJobsRecruiterManages(@PathVariable("id") Long recruiterId){
+        Set<JobNode> jobNodes = this.recruiterService.getAllJobsRecruiterManages(recruiterId);
+        return ResponseEntity.ok(jobNodes);
     }
 
 }

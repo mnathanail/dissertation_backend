@@ -7,12 +7,16 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RepositoryRestResource(collectionResourceRel = "job", path = "job")
 public interface JobNodeRepository extends Neo4jRepository<JobNode, Long> {
 
     Optional<JobNode> findByJobId(String jobId);
+
+    List<JobNode> findAllByJobId(Set<String> jobIds);
 
     @Query(value = "MATCH (j:JobNode)-[:REQUIRES]->(s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item) " +
             "WITH j  MATCH (j)-[r:REQUIRES]->(requiredSkills:SkillNode) " +

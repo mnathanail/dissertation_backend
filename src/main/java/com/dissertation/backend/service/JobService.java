@@ -1,5 +1,6 @@
 package com.dissertation.backend.service;
 
+import com.dissertation.backend.exception.custom.candidate_exception.CandidateNotFoundException;
 import com.dissertation.backend.exception.custom.job_exception.JobNotFoundException;
 import com.dissertation.backend.node.CandidateAppliedForJob;
 import com.dissertation.backend.node.CandidateNode;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import javax.ws.rs.NotFoundException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -107,6 +109,36 @@ public class JobService {
         }
     }
 
+    public Boolean candidateDeleteApplyForJob(Long candidateId, String jobId) {
+        Optional<JobNode> job = jobNodeRepository.findByJobId(jobId);
+        Optional<CandidateNode> candidate = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+
+        if (job.isPresent() && candidate.isPresent()) {
+            String uuid = UUID.randomUUID().toString();
+            candidate.get().getJobNodes().remove(new CandidateAppliedForJob(job.get(), uuid));
+            CandidateNode cn = candidateNodeRepository.save(candidate.get());
+            return cn.getJobNodes().stream()
+                    .noneMatch(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(uuid));
+        }
+        else {
+            return false;
+        }
+    }
+
+    public boolean candidateHasAlreadyAppliedForJob(Long candidateId, String jobId) {
+        Optional<JobNode> job = jobNodeRepository.findByJobId(jobId);
+        Optional<CandidateNode> candidate = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+
+        if (job.isPresent() && candidate.isPresent()) {
+            String uuid = UUID.randomUUID().toString();
+            return candidate.get().getJobNodes().stream()
+                    .anyMatch(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(uuid));
+        }
+        else {
+            return false;
+        }
+    }
+
     public Page<JobNode> candidateSearchJobByKeywords(List<String> keywords, int page, int size){
         String[] a = keywords.stream().toArray(String[]::new);
 
@@ -126,6 +158,18 @@ public class JobService {
         }
         else{
             throw new JobNotFoundException("Job did not found " + jobId);
+        }
+    }
+
+    public Set<JobNode> getAllJobsCandidateApplied(Long candidateId){
+        Optional<CandidateNode> candidate = this.candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+        if(candidate.isPresent()){
+            return candidate.get().getJobNodes().stream()
+                    .map(CandidateAppliedForJob::getJobNode)
+                    .collect(Collectors.toSet());
+        }
+        else{
+            throw new CandidateNotFoundException("Candidate does not exist " + candidateId);
         }
     }
 

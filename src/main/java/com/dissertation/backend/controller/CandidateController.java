@@ -3,10 +3,7 @@ package com.dissertation.backend.controller;
 import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.entity.Skill;
 import com.dissertation.backend.entity.Summary;
-import com.dissertation.backend.node.CandidateSkillRelationship;
-import com.dissertation.backend.node.EducationNode;
-import com.dissertation.backend.node.ExperienceNode;
-import com.dissertation.backend.node.GeneralSkillNode;
+import com.dissertation.backend.node.*;
 import com.dissertation.backend.repository.CandidateNodeRepository;
 import com.dissertation.backend.repository.CandidateRepository;
 import com.dissertation.backend.service.*;
@@ -36,6 +33,7 @@ public class CandidateController {
     private final SummaryService summaryService;
     private final SkillService skillService;
     private final CandidateNodeRepository candidateNodeRepository;
+    private final JobService jobNodeService;
 
     @PostMapping(value = "/candidate/login")
     public ResponseEntity<Candidate> login(@Valid @RequestParam Candidate candidate) {
@@ -44,7 +42,7 @@ public class CandidateController {
     }
 
     @PostMapping(value = "/register")
-    public ResponseEntity<Candidate> register(@Valid @RequestParam Candidate candidate) {
+    public ResponseEntity<Candidate> register(@RequestBody Candidate candidate) {
         Candidate c = candidateService.register(candidate);
         return ResponseEntity.ok(c);
     }
@@ -281,4 +279,9 @@ public class CandidateController {
 
     /*---------------------------/Skill-------------------------------------------------------------------------------*/
 
+    @GetMapping(value = "/{id}/get/applied-job-list")
+    public ResponseEntity<Set<JobNode>> getAllJobsCandidateApplied(@PathVariable("id") Long candidateId){
+        Set<JobNode> jobNodes = this.jobNodeService.getAllJobsCandidateApplied(candidateId);
+        return ResponseEntity.ok(jobNodes);
+    }
 }
