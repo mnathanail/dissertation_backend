@@ -18,7 +18,7 @@ public class JobRequiresRelationship {
     @TargetNode
     private SkillNode skillNode;
 
-    @Property(name = "relUuid")
+    @Property(name = "rel_uuid")
     private String relUuid;
 
     @Property(name = "years_of_experience")

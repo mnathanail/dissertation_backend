@@ -86,15 +86,15 @@ public class CandidateService {
             Candidate candidate = c.get();
             candidate.setEmail(candidate.getEmail());
             candidate.setProfilePic(profilePic);
-
             return candidateRepository.save(candidate);
         } else {
-            return c.orElseThrow(ArithmeticException::new);
+            return null;
         }
     }
 
     public Candidate getProfile(Long id) {
-        return candidateRepository.findById(id).orElseThrow(IllegalAccessError::new);
+        Optional<Candidate> candidate =  candidateRepository.findById(id);
+        return candidate.orElse(null);
     }
 
     public Candidate register(Candidate candidate) {

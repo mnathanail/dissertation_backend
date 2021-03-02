@@ -2,19 +2,17 @@ package com.dissertation.backend.service;
 
 import com.dissertation.backend.exception.custom.candidate_exception.CandidateNotFoundException;
 import com.dissertation.backend.exception.custom.job_exception.JobNotFoundException;
-import com.dissertation.backend.node.CandidateAppliedForJob;
-import com.dissertation.backend.node.CandidateNode;
-import com.dissertation.backend.node.JobNode;
-import com.dissertation.backend.node.RecruiterNode;
+import com.dissertation.backend.node.*;
 import com.dissertation.backend.repository.CandidateNodeRepository;
 import com.dissertation.backend.repository.JobNodeRepository;
 import com.dissertation.backend.repository.RecruiterNodeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.neo4j.core.Neo4jClient;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.NotFoundException;
@@ -28,6 +26,9 @@ public class JobService {
     private final JobNodeRepository jobNodeRepository;
     private final RecruiterNodeRepository recruiterNodeRepository;
     private final CandidateNodeRepository candidateNodeRepository;
+
+    @Qualifier("graphDriver")
+    private final Neo4jClient neo4jClient;
 
     public JobNode setJob(Long recruiterId, JobNode jobNode) {
         Optional<RecruiterNode> recruiterNode = this.recruiterNodeRepository.findByEntityId(recruiterId);
@@ -70,7 +71,21 @@ public class JobService {
         Optional<JobNode> jobNode = jobNodeRepository.findByJobId(jobId);
         if (jobNode.isPresent()) {
             JobNode job = jobNode.get();
-            BeanUtils.copyProperties(jobNodeParam, job, getNullPropertyNames(jobNodeParam));
+            //BeanUtils.copyProperties(jobNodeParam, job, getNullPropertyNames(jobNodeParam));
+            updateExperience(jobNodeParam, job);
+
+            List<JobRequiresRelationship> differences = jobNodeParam.getRequiredSkills().stream()
+                    .filter(element -> !job.getRequiredSkills().contains(element.getSkillNode()))
+                    .collect(Collectors.toList());
+            if(differences.size()>0){
+                int index = differences.size()-1;
+                while(index>=0){
+                    Long entityId = differences.get(index).getSkillNode().getEntityId();
+                    jobNodeRepository.detatchRelationshipJobSkill(jobId, entityId);
+                    index--;
+                }
+            }
+
             return jobNodeRepository.save(job);
         } else {
             return null;
@@ -114,11 +129,18 @@ public class JobService {
         Optional<CandidateNode> candidate = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
 
         if (job.isPresent() && candidate.isPresent()) {
-            String uuid = UUID.randomUUID().toString();
-            candidate.get().getJobNodes().remove(new CandidateAppliedForJob(job.get(), uuid));
-            CandidateNode cn = candidateNodeRepository.save(candidate.get());
-            return cn.getJobNodes().stream()
-                    .noneMatch(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(uuid));
+
+            Set<CandidateAppliedForJob> a = candidate.get().getJobNodes().stream()
+                    .peek(CandidateAppliedForJob::getJobNode)
+                    .filter(s->s.getJobNode().getJobId().equals(jobId))
+                    .collect(Collectors.toSet());
+            String relUuid = a.stream().findFirst().get().getRelUuid();
+
+            candidate.get().getJobNodes().removeIf(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(relUuid));
+
+            candidateNodeRepository.deleteByRelUuidIn(candidateId, relUuid);
+            Optional<Boolean> isExist = candidateNodeRepository.checkIfRelationshipExists(relUuid);
+            return isExist.isPresent();
         }
         else {
             return false;
@@ -130,9 +152,8 @@ public class JobService {
         Optional<CandidateNode> candidate = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
 
         if (job.isPresent() && candidate.isPresent()) {
-            String uuid = UUID.randomUUID().toString();
             return candidate.get().getJobNodes().stream()
-                    .anyMatch(candidateAppliedForJob -> candidateAppliedForJob.getRelUuid().equals(uuid));
+                    .anyMatch(candidateAppliedForJob -> candidateAppliedForJob.getJobNode().getJobId().equals(jobId));
         }
         else {
             return false;
@@ -140,9 +161,9 @@ public class JobService {
     }
 
     public Page<JobNode> candidateSearchJobByKeywords(List<String> keywords, int page, int size){
-        String[] a = keywords.stream().toArray(String[]::new);
+        String[] a = keywords.stream().map(s -> s.replace("%20", " ")).toArray(String[]::new);
 
-        return this.jobNodeRepository.findJobNodeByListOfSkills(keywords.stream().toArray(String[]::new), PageRequest.of(page-1,size));
+        return this.jobNodeRepository.findJobNodeByListOfSkills(keywords.stream().map(s -> s.replace("%20", " ")).toArray(String[]::new), PageRequest.of(page-1,size));
               //  PageRequest.of(page, size)).getContent();
     }
 
@@ -173,6 +194,83 @@ public class JobService {
         }
     }
 
+    public Set<RecommendationExtendedModel> getRecommendationsForJob(String jobId, Long recruiterId){
+        boolean check = jobNodeRepository.chechJobAndRecruiterRelationExists(jobId, recruiterId);
+        if(check){
+            return new HashSet<>(neo4jClient.query(
+                    "MATCH (job:JobNode{job_id:$jobId})-[:REQUIRES]->(sk:SkillNode) " +
+                            "WITH job, count(sk) as total_skills, collect(sk.name) as total_skill_names " +
+                            "MATCH (job)-[r:REQUIRES]->(s:SkillNode)<-[k:KNOWS]-(c:CandidateNode) " +
+                            "WHERE r.years_of_experience <= k.years_of_experience " +
+                            "WITH c as candidate, count(s) as skills, total_skills, total_skill_names, collect(s.name) as haveSkillNames " +
+                            "RETURN candidate.name as candidateName, candidate.entity_id as candidateEntityId, " +
+                            "round(10^2*skills/total_skills)/10^2 as percent, " +
+                            "skills as candidateSkillNumber, total_skills as totalSkillsNumber, " +
+                            "total_skill_names as totalSkillNames, haveSkillNames " +
+                            "ORDER BY percent DESC;"
+            )
+                    .bind(jobId)
+                    .to("jobId")
+                    .fetchAs(RecommendationExtendedModel.class)
+                    .mappedBy((typeSystem, record) -> {
+                        List<Object> haveSkillNames = record.get("haveSkillNames").asList();
+                        List<Object> totalSkillNames = record.get("totalSkillNames").asList();
+                        return new RecommendationExtendedModel(
+                                record.get("candidateName").asString(),
+                                record.get("candidateEntityId").asLong(),
+                                haveSkillNames.toArray(new String[haveSkillNames.size()]),
+                                totalSkillNames.toArray(new String[totalSkillNames.size()]),
+                                record.get("percent").asDouble(),
+                                record.get("totalSkillsNumber").asInt(),
+                                record.get("candidateSkillNumber").asInt()
+                        );
+                    })
+                    .all());
+        }
+        else {
+            throw new JobNotFoundException("Job did not found " + jobId);
+        }
+    }
+
+    public Set<RecommendationExtendedModel> getRecommendationsForAppliedJob(String jobId, Long recruiterId){
+        boolean check = jobNodeRepository.chechJobAndRecruiterRelationExists(jobId, recruiterId);
+        if(check){
+            return new HashSet<>(neo4jClient.query(
+                    "MATCH (job:JobNode{job_id:$jobId})-[:REQUIRES]->(sk:SkillNode) " +
+                            "WITH job, count(sk) as total_skills, collect(sk.name) as total_skill_names " +
+                            "MATCH (job)-[r:REQUIRES]->(s:SkillNode)<-[k:KNOWS]-(c:CandidateNode) " +
+                            "MATCH (c)-[:APPLIED_FOR]-(job) " +
+                            "WHERE r.years_of_experience <= k.years_of_experience " +
+                            "WITH c as candidate, count(s) as skills, total_skills, total_skill_names, collect(s.name) as haveSkillNames " +
+                            "RETURN candidate.name as candidateName, candidate.entity_id as candidateEntityId, " +
+                            "round(10^2*skills/total_skills)/10^2 as percent, " +
+                            "skills as candidateSkillNumber, total_skills as totalSkillsNumber, " +
+                            "total_skill_names as totalSkillNames, haveSkillNames " +
+                            "ORDER BY percent DESC;"
+            )
+                    .bind(jobId)
+                    .to("jobId")
+                    .fetchAs(RecommendationExtendedModel.class)
+                    .mappedBy((typeSystem, record) -> {
+                        List<Object> haveSkillNames = record.get("haveSkillNames").asList();
+                        List<Object> totalSkillNames = record.get("totalSkillNames").asList();
+                        return new RecommendationExtendedModel(
+                                record.get("candidateName").asString(),
+                                record.get("candidateEntityId").asLong(),
+                                haveSkillNames.toArray(new String[haveSkillNames.size()]),
+                                totalSkillNames.toArray(new String[totalSkillNames.size()]),
+                                record.get("percent").asDouble(),
+                                record.get("totalSkillsNumber").asInt(),
+                                record.get("candidateSkillNumber").asInt()
+                        );
+                    })
+                    .all());
+        }
+        else {
+            throw new JobNotFoundException("Job did not found " + jobId);
+        }
+    }
+
     public String[] getNullPropertyNames(Object source) {
         final BeanWrapper src = new BeanWrapperImpl(source);
         java.beans.PropertyDescriptor[] pds = src.getPropertyDescriptors();
@@ -193,6 +291,24 @@ public class JobService {
             return recruiterNode.get();
         } else {
             throw new NotFoundException();
+        }
+    }
+
+    private void updateExperience(JobNode jobNode, JobNode job) {
+        if(jobNode.getJobTitle()!= null){
+            job.setJobTitle(jobNode.getJobTitle());
+        }
+        if(jobNode.getDescription()!= null){
+            job.setDescription(jobNode.getDescription());
+        }
+        if(jobNode.getRequiredSkills()!= null){
+            List<JobRequiresRelationship> jobList = new ArrayList<>(job.getRequiredSkills());
+            int index = 0;
+            for(JobRequiresRelationship jrl : job.getRequiredSkills()){
+                String uuid = jobList.get(index).getRelUuid();
+                jobList.get(index).setSkillNode(jrl.getSkillNode());
+                jobList.get(index).setYearsOfExperience(jrl.getYearsOfExperience());
+            }
         }
     }
 

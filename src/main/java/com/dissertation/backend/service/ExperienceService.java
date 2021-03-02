@@ -1,16 +1,20 @@
 package com.dissertation.backend.service;
 
+import com.dissertation.backend.exception.custom.candidate_exception.CandidateNotFoundException;
+import com.dissertation.backend.exception.custom.experience_exception.ExperienceNotFoundException;
+import com.dissertation.backend.exception.custom.recruiter_exception.RecruiterNotFoundException;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.ExperienceNode;
+import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
+import com.dissertation.backend.repository.CandidateRepository;
 import com.dissertation.backend.repository.ExperienceNodeRepository;
+import com.dissertation.backend.repository.RecruiterNodeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Service;
 
-import javax.ws.rs.NotFoundException;
 import java.util.*;
 
 @Service
@@ -18,6 +22,10 @@ import java.util.*;
 public class ExperienceService {
 
     private final CandidateNodeRepository candidateNodeRepository;
+
+    private final CandidateRepository candidateRepository;
+
+    private final RecruiterNodeRepository recruiterNodeRepository;
 
     private final ExperienceNodeRepository experienceNodeRepository;
 
@@ -27,17 +35,34 @@ public class ExperienceService {
      * @return experienceNode | notfound
      */
     public ExperienceNode setExperience(ExperienceNode experience, Long candidateId) {
-        Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
-        if (cn.isPresent()) {
-            experience.setExperienceId(UUID.randomUUID().toString());
-            ExperienceNode exp = experienceNodeRepository.save(experience);
-            String experienceId = exp.getExperienceId();
-            candidateNodeRepository.createRelationCandidateExperience(candidateId, experienceId);
+        boolean isRecruiter = this.isRecruiter(candidateId);
+        if(isRecruiter){
+            Optional<RecruiterNode> rn = recruiterNodeRepository.findByEntityId(candidateId);
+            if (rn.isPresent()) {
+                experience.setExperienceId(UUID.randomUUID().toString());
+                ExperienceNode exp = experienceNodeRepository.save(experience);
+                String experienceId = exp.getExperienceId();
+                recruiterNodeRepository.createRelationRecruiterExperience(candidateId, experienceId);
 
-            return exp;
-        } else {
-            throw new NotFoundException();
+                return exp;
+            } else {
+                throw new RecruiterNotFoundException("Recruiter not found!");
+            }
         }
+        else{
+            Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+            if (cn.isPresent()) {
+                experience.setExperienceId(UUID.randomUUID().toString());
+                ExperienceNode exp = experienceNodeRepository.save(experience);
+                String experienceId = exp.getExperienceId();
+                candidateNodeRepository.createRelationCandidateExperience(candidateId, experienceId);
+
+                return exp;
+            } else {
+                throw new CandidateNotFoundException("Candidate not found!");
+            }
+        }
+
     }
 
     /**
@@ -46,7 +71,7 @@ public class ExperienceService {
      */
     public ExperienceNode getExperience(String experienceId) {
         Optional<ExperienceNode> epx = experienceNodeRepository.findByExperienceId(experienceId);
-        return epx.orElseThrow(ArithmeticException::new);
+        return epx.orElse(null);
     }
 
     /**
@@ -54,9 +79,14 @@ public class ExperienceService {
      * @return experienceNode List | empty list
      */
     public List<ExperienceNode> getListExperience(Long candidateId) {
-        List<ExperienceNode> experienceNodeList =
-                experienceNodeRepository.findCandidateExperience(candidateId);
-        return experienceNodeList;
+        boolean isRecruiter = this.isRecruiter(candidateId);
+        if(isRecruiter){
+            return experienceNodeRepository.findRecruiterExperience(candidateId);
+        }
+        else{
+            return experienceNodeRepository.findCandidateExperience(candidateId);
+        }
+
     }
 
     /**
@@ -80,21 +110,15 @@ public class ExperienceService {
         Optional<ExperienceNode> exp = experienceNodeRepository.findByExperienceId(experienceId);
         if(exp.isPresent()){
             ExperienceNode experience = exp.get();
-
-           // experience = updateExperience(experienceParam, experience);
-
-            BeanUtils.copyProperties(experienceParam, experience, getNullPropertyNames(experienceParam));
-
-            System.out.println(experience);
-            ExperienceNode updatedExperience = experienceNodeRepository.save(experience);
-            return  updatedExperience;
+            updateExperience(experienceParam, experience);
+            return experienceNodeRepository.save(experience);
         }
         else {
-            return exp.orElseThrow(ArithmeticException::new);
+            throw new ExperienceNotFoundException("Experience not found " + experienceId);
         }
     }
 
-    private ExperienceNode updateExperience(ExperienceNode experienceNode, ExperienceNode experience) {
+    private void updateExperience(ExperienceNode experienceNode, ExperienceNode experience) {
         if(experienceNode.getJobTitle()!= null){
             experience.setJobTitle(experienceNode.getJobTitle());
         }
@@ -107,10 +131,21 @@ public class ExperienceService {
         if(experienceNode.getDescription()!= null){
             experience.setDescription(experienceNode.getDescription());
         }
-        if(experienceNode.getIsCurrent()!= null){
+        if(experienceNode.getIsCurrent()!= null) {
             experience.setIsCurrent(experienceNode.getIsCurrent());
         }
-        return experience;
+        if(experienceNode.getPeriod().getStartMonth() != null){
+            experience.getPeriod().setStartMonth(experienceNode.getPeriod().getStartMonth());
+        }
+        if(experienceNode.getPeriod().getStartYear() != null){
+            experience.getPeriod().setStartYear(experienceNode.getPeriod().getStartYear());
+        }
+        if(experienceNode.getPeriod().getEndMonth() != null){
+            experience.getPeriod().setEndMonth(experienceNode.getPeriod().getEndMonth());
+        }
+        if(experienceNode.getPeriod().getEndYear() != null){
+            experience.getPeriod().setEndYear(experienceNode.getPeriod().getEndYear());
+        }
     }
 
     public  String[] getNullPropertyNames (Object source) {
@@ -120,10 +155,18 @@ public class ExperienceService {
         Set<String> emptyNames = new HashSet<>();
         for(java.beans.PropertyDescriptor pd : pds) {
             Object srcValue = src.getPropertyValue(pd.getName());
+            if(pd.getName().equals("period")){
+                System.out.println(123);
+            }
             if (srcValue == null) emptyNames.add(pd.getName());
         }
 
         String[] result = new String[emptyNames.size()];
         return emptyNames.toArray(result);
+    }
+
+    private boolean isRecruiter(Long id){
+        Utils util = new Utils(candidateRepository);
+        return util.isRecruiter(id);
     }
 }

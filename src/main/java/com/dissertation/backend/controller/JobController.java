@@ -1,6 +1,7 @@
 package com.dissertation.backend.controller;
 
 import com.dissertation.backend.node.JobNode;
+import com.dissertation.backend.node.RecommendationExtendedModel;
 import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.service.JobService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RepositoryRestController
 
@@ -68,6 +70,20 @@ public class JobController {
     @GetMapping("/get/recruiter/job/{jobId}")
     ResponseEntity<String> getRecruiterByJobId(@PathVariable("jobId") String jobId){
         RecruiterNode recruiterNode = jobService.getRecruiterByJobId(jobId);
-        return ResponseEntity.ok(recruiterNode.getRecruiterId());
+        return ResponseEntity.ok(String.valueOf(recruiterNode.getEntityId()));
+    }
+
+    @GetMapping("/get/recruiter/{recruiterId}/recommendation/{jobId}")
+    ResponseEntity<Set<RecommendationExtendedModel>> getRecommendationJobId(@PathVariable("jobId") String jobId,
+                                                                            @PathVariable("recruiterId") Long recruiterId){
+        Set<RecommendationExtendedModel> recommendation = jobService.getRecommendationsForJob(jobId,recruiterId);
+        return ResponseEntity.ok(recommendation);
+    }
+
+    @GetMapping("/get/recruiter/{recruiterId}/recommendation/applied/{jobId}")
+    ResponseEntity<Set<RecommendationExtendedModel>> getRecommendationsForAppliedJob(@PathVariable("jobId") String jobId,
+                                                                            @PathVariable("recruiterId") Long recruiterId){
+        Set<RecommendationExtendedModel> recommendation = jobService.getRecommendationsForAppliedJob(jobId,recruiterId);
+        return ResponseEntity.ok(recommendation);
     }
 }

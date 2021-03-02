@@ -17,6 +17,9 @@ public interface ExperienceNodeRepository  extends Neo4jRepository<ExperienceNod
     @Query("MATCH (e:ExperienceNode) <- [r:EXPERIENCE]-(c:CandidateNode) WHERE c.entity_id = $id RETURN e")
     List<ExperienceNode> findCandidateExperience(Long id);
 
+    @Query("MATCH (e:ExperienceNode) <- [r:EXPERIENCE]-(c:RecruiterNode) WHERE c.entity_id = $id RETURN e")
+    List<ExperienceNode> findRecruiterExperience(Long id);
+
     @Transactional
     public default void deleteById(Long id) {
 

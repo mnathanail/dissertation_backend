@@ -4,8 +4,12 @@ import com.dissertation.backend.exception.custom.candidate_exception.CandidateNo
 import com.dissertation.backend.exception.custom.candidate_exception.CandidateNotFoundResponse;
 import com.dissertation.backend.exception.custom.education_exception.EducationNotFoundException;
 import com.dissertation.backend.exception.custom.education_exception.EducationNotFoundResponse;
+import com.dissertation.backend.exception.custom.experience_exception.ExperienceNotFoundException;
+import com.dissertation.backend.exception.custom.experience_exception.ExperienceNotFoundResponse;
 import com.dissertation.backend.exception.custom.job_exception.JobNotFoundException;
 import com.dissertation.backend.exception.custom.job_exception.JobNotFoundResponse;
+import com.dissertation.backend.exception.custom.recruiter_exception.RecruiterNotFoundException;
+import com.dissertation.backend.exception.custom.recruiter_exception.RecruiterNotFoundResponse;
 import com.dissertation.backend.response.DataIntegrityViolationResponse;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpHeaders;
@@ -49,10 +53,18 @@ public class RestAuthenticationEntryPoint extends ResponseEntityExceptionHandler
         return new ResponseEntity<>(enfr, HttpStatus.NOT_FOUND);
     }
 
-
     @ExceptionHandler
     protected ResponseEntity<EducationNotFoundResponse> handleException(Exception e, Locale locale) {
         EducationNotFoundResponse enfr = new EducationNotFoundResponse();
+        enfr.setStatus(HttpStatus.BAD_REQUEST.value());
+        enfr.setMessage(e.getMessage());
+        enfr.setTimeStamp(System.currentTimeMillis());
+        return new ResponseEntity<>(enfr, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({ExperienceNotFoundException.class})
+    protected ResponseEntity<ExperienceNotFoundResponse> handleException(ExperienceNotFoundException e, Locale locale) {
+        ExperienceNotFoundResponse enfr = new ExperienceNotFoundResponse();
         enfr.setStatus(HttpStatus.BAD_REQUEST.value());
         enfr.setMessage(e.getMessage());
         enfr.setTimeStamp(System.currentTimeMillis());
@@ -66,6 +78,15 @@ public class RestAuthenticationEntryPoint extends ResponseEntityExceptionHandler
         enfr.setMessage(e.getMessage());
         enfr.setTimeStamp(System.currentTimeMillis());
         return new ResponseEntity<>(enfr, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler({RecruiterNotFoundException.class})
+    protected ResponseEntity<RecruiterNotFoundResponse> handleException(RecruiterNotFoundException e, Locale locale) {
+        RecruiterNotFoundResponse rnfr = new RecruiterNotFoundResponse();
+        rnfr.setStatus(HttpStatus.NOT_FOUND.value());
+        rnfr.setMessage(e.getMessage());
+        rnfr.setTimeStamp(System.currentTimeMillis());
+        return new ResponseEntity<>(rnfr, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler({JobNotFoundException.class})

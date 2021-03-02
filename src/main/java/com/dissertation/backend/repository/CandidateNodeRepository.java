@@ -22,4 +22,9 @@ public interface CandidateNodeRepository extends Neo4jRepository<CandidateNode, 
             "MERGE (c)-[r:EDUCATION]->(e);")
     void createRelationCandidateEducation(Long candidate_id, String edu_id);
 
+    @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:APPLIED_FOR]->(:JobNode) WHERE r.relUuid = $uuid DELETE r;")
+    void deleteByRelUuidIn(Long entityId, String uuid);
+
+    @Query("MATCH (:CandidateNode)-[r:APPLIED_FOR]->(:JobNode) WHERE r.relUuid = $uuid RETURN r;")
+    Optional<Boolean> checkIfRelationshipExists(String uuid);
 }

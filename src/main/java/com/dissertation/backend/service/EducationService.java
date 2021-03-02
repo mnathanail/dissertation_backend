@@ -6,13 +6,15 @@ import com.dissertation.backend.node.EducationNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
 import com.dissertation.backend.repository.EducationNodeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.stereotype.Service;
 
 import javax.ws.rs.NotFoundException;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +59,8 @@ public class EducationService {
      */
     public Set<EducationNode> getListEducation(Long candidateId) {
         Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
-        return cn.map(CandidateNode::getEducationNodes).orElse(null);
+
+        return cn.map(CandidateNode::getEducationNodes).orElse(new HashSet<>());
     }
 
     /**
@@ -81,16 +84,15 @@ public class EducationService {
         Optional<EducationNode> edu = educationNodeRepository.findByEducationId(educationId);
         if (edu.isPresent()) {
             EducationNode education = edu.get();
-            // experience = updateExperience(experienceParam, experience);
-            BeanUtils.copyProperties(educationParam, education, getNullPropertyNames(educationParam));
-            EducationNode updatedEducation = educationNodeRepository.save(education);
-            return updatedEducation;
+            updateExperience(educationParam, education);
+            //BeanUtils.copyProperties(educationParam, education, getNullPropertyNames(educationParam));
+            return educationNodeRepository.save(education);
         } else {
             throw new EducationNotFoundException("Education not found " + educationId);
         }
     }
 
-    private EducationNode updateExperience(EducationNode educationNode, EducationNode education) {
+    private void updateExperience(EducationNode educationNode, EducationNode education) {
         if (educationNode.getTitle() != null) {
             education.setTitle(educationNode.getTitle());
         }
@@ -100,7 +102,18 @@ public class EducationService {
         if (educationNode.getSchool() != null) {
             education.setSchool(educationNode.getSchool());
         }
-        return education;
+        if(educationNode.getPeriod().getStartMonth() != null){
+            education.getPeriod().setStartMonth(educationNode.getPeriod().getStartMonth());
+        }
+        if(educationNode.getPeriod().getStartYear() != null){
+            education.getPeriod().setStartYear(educationNode.getPeriod().getStartYear());
+        }
+        if(educationNode.getPeriod().getEndMonth() != null){
+            education.getPeriod().setEndMonth(educationNode.getPeriod().getEndMonth());
+        }
+        if(educationNode.getPeriod().getEndYear() != null){
+            education.getPeriod().setEndYear(educationNode.getPeriod().getEndYear());
+        }
     }
 
     public String[] getNullPropertyNames(Object source) {
