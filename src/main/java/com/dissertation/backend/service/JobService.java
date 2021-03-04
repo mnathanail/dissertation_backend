@@ -71,20 +71,12 @@ public class JobService {
         Optional<JobNode> jobNode = jobNodeRepository.findByJobId(jobId);
         if (jobNode.isPresent()) {
             JobNode job = jobNode.get();
-            //BeanUtils.copyProperties(jobNodeParam, job, getNullPropertyNames(jobNodeParam));
-            updateExperience(jobNodeParam, job);
-
-            List<JobRequiresRelationship> differences = jobNodeParam.getRequiredSkills().stream()
-                    .filter(element -> !job.getRequiredSkills().contains(element.getSkillNode()))
-                    .collect(Collectors.toList());
-            if(differences.size()>0){
-                int index = differences.size()-1;
-                while(index>=0){
-                    Long entityId = differences.get(index).getSkillNode().getEntityId();
-                    jobNodeRepository.detatchRelationshipJobSkill(jobId, entityId);
-                    index--;
-                }
+            for(JobRequiresRelationship jrr : job.getRequiredSkills()){
+                Long entityId = jrr.getSkillNode().getEntityId();
+                jobNodeRepository.detatchRelationshipJobSkill(jobId, entityId);
             }
+
+            updateJobObject(jobNodeParam, job);
 
             return jobNodeRepository.save(job);
         } else {
@@ -294,21 +286,18 @@ public class JobService {
         }
     }
 
-    private void updateExperience(JobNode jobNode, JobNode job) {
-        if(jobNode.getJobTitle()!= null){
+    private void updateJobObject(JobNode jobNode, JobNode job) {
+        if(!jobNode.getJobTitle().equals(job.getJobTitle())){
             job.setJobTitle(jobNode.getJobTitle());
         }
-        if(jobNode.getDescription()!= null){
+        if(!jobNode.getDescription().equals(job.getDescription())){
             job.setDescription(jobNode.getDescription());
         }
-        if(jobNode.getRequiredSkills()!= null){
-            List<JobRequiresRelationship> jobList = new ArrayList<>(job.getRequiredSkills());
-            int index = 0;
-            for(JobRequiresRelationship jrl : job.getRequiredSkills()){
-                String uuid = jobList.get(index).getRelUuid();
-                jobList.get(index).setSkillNode(jrl.getSkillNode());
-                jobList.get(index).setYearsOfExperience(jrl.getYearsOfExperience());
-            }
+        if(jobNode.getRequiredSkills().size()>0 ){
+            job.setRequiredSkills(jobNode.getRequiredSkills());
+            job.getRequiredSkills().forEach(a -> {
+                a.setRelUuid(UUID.randomUUID().toString());
+            });
         }
     }
 

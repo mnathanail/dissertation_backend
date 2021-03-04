@@ -7,9 +7,6 @@ import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
 
-/*
-@RelationshipEntity(type = "REQUIRES")
-*/
 @Getter
 @Setter
 @RelationshipProperties
@@ -18,7 +15,7 @@ public class JobRequiresRelationship {
     @TargetNode
     private SkillNode skillNode;
 
-    @Property(name = "rel_uuid")
+    @Property(name = "relUuid")
     private String relUuid;
 
     @Property(name = "years_of_experience")
