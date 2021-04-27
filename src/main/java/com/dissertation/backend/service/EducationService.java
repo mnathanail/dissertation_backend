@@ -3,8 +3,11 @@ package com.dissertation.backend.service;
 import com.dissertation.backend.exception.custom.education_exception.EducationNotFoundException;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.EducationNode;
+import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
+import com.dissertation.backend.repository.CandidateRepository;
 import com.dissertation.backend.repository.EducationNodeRepository;
+import com.dissertation.backend.repository.RecruiterNodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
@@ -24,22 +27,43 @@ public class EducationService {
 
     private final EducationNodeRepository educationNodeRepository;
 
+    private final CandidateRepository candidateRepository;
+
+    private final RecruiterNodeRepository recruiterNodeRepository;
+
+
     /**
      * @param education   - EducationNode Obj
      * @param candidateId - Candidate Id
      * @return EducationNode | notfound
      */
     public EducationNode setEducation(EducationNode education, Long candidateId) {
-        Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
-        if (cn.isPresent()) {
-            education.setEducationId(UUID.randomUUID().toString());
-            EducationNode edu = educationNodeRepository.save(education);
-            String educationId = edu.getEducationId();
-            candidateNodeRepository.createRelationCandidateEducation(candidateId, educationId);
+        boolean isRecruiter = this.isRecruiter(candidateId);
+        if(isRecruiter){
+            Optional<RecruiterNode> rq = recruiterNodeRepository.findByEntityId(candidateId);
+            if (rq.isPresent()) {
+                education.setEducationId(UUID.randomUUID().toString());
+                EducationNode edu = educationNodeRepository.save(education);
+                String educationId = edu.getEducationId();
+                recruiterNodeRepository.createRelationRecruiterEducation(candidateId, educationId);
 
-            return edu;
-        } else {
-            throw new NotFoundException();
+                return edu;
+            } else {
+                throw new NotFoundException();
+            }
+        }
+        else {
+            Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+            if (cn.isPresent()) {
+                education.setEducationId(UUID.randomUUID().toString());
+                EducationNode edu = educationNodeRepository.save(education);
+                String educationId = edu.getEducationId();
+                candidateNodeRepository.createRelationCandidateEducation(candidateId, educationId);
+
+                return edu;
+            } else {
+                throw new NotFoundException();
+            }
         }
     }
 
@@ -58,9 +82,16 @@ public class EducationService {
      * @return educationNode List | empty list
      */
     public Set<EducationNode> getListEducation(Long candidateId) {
-        Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+        boolean isRecruiter = this.isRecruiter(candidateId);
+        if(isRecruiter){
+            Optional<RecruiterNode> cn = recruiterNodeRepository.findByEntityId(candidateId);
+            return cn.map(RecruiterNode::getEducationNodes).orElse(new HashSet<>());
+        }
+        else{
+            Optional<CandidateNode> cn = candidateNodeRepository.findCandidateNodeByEntityId(candidateId);
+            return cn.map(CandidateNode::getEducationNodes).orElse(new HashSet<>());
+        }
 
-        return cn.map(CandidateNode::getEducationNodes).orElse(new HashSet<>());
     }
 
     /**
@@ -69,9 +100,7 @@ public class EducationService {
     public boolean deleteEducation(String educationId) {
         EducationNode experienceNodeDelete =
                 educationNodeRepository.deleteExperienceNodeByEducationIdCustom(educationId);
-
         Optional<EducationNode> educationNode = educationNodeRepository.findByEducationId(educationId);
-
         return educationNode.isPresent();
     }
 
@@ -128,5 +157,10 @@ public class EducationService {
 
         String[] result = new String[emptyNames.size()];
         return emptyNames.toArray(result);
+    }
+
+    private boolean isRecruiter(Long id){
+        Utils util = new Utils(candidateRepository);
+        return util.isRecruiter(id);
     }
 }

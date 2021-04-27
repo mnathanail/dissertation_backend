@@ -14,4 +14,8 @@ public class CandidateNotFoundException extends RuntimeException{
     public CandidateNotFoundException(Throwable cause) {
         super(cause);
     }
+
+    public CandidateNotFoundException() {
+
+    }
 }

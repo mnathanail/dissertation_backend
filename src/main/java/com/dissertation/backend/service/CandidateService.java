@@ -3,6 +3,7 @@ package com.dissertation.backend.service;
 import com.dissertation.backend.entity.Candidate;
 import com.dissertation.backend.entity.Role;
 import com.dissertation.backend.enums.Roles;
+import com.dissertation.backend.exception.custom.candidate_exception.CandidateNotFoundException;
 import com.dissertation.backend.node.CandidateNode;
 import com.dissertation.backend.node.RecruiterNode;
 import com.dissertation.backend.repository.*;
@@ -66,7 +67,7 @@ public class CandidateService {
 
     public Candidate findByEmail(String email) {
         Optional<Candidate> candidate = candidateRepository.findCandidateByEmail(email);
-        return candidate.orElseThrow(NotFoundException::new);
+        return candidate.orElseThrow(CandidateNotFoundException::new);
     }
 
     public CandidateNode saveOrUpdateCandidate(CandidateNode candidateNode) {

@@ -192,7 +192,8 @@ public class JobService {
             return new HashSet<>(neo4jClient.query(
                     "MATCH (job:JobNode{job_id:$jobId})-[:REQUIRES]->(sk:SkillNode) " +
                             "WITH job, count(sk) as total_skills, collect(sk.name) as total_skill_names " +
-                            "MATCH (job)-[r:REQUIRES]->(s:SkillNode)<-[k:KNOWS]-(c:CandidateNode) " +
+                            "MATCH (c:CandidateNode) WHERE not ((c)-[:APPLIED_FOR]->(job)) " +
+                            "MATCH (job)-[r:REQUIRES]->(s:SkillNode)<-[k:KNOWS]-(c) " +
                             "WHERE r.years_of_experience <= k.years_of_experience " +
                             "WITH c as candidate, count(s) as skills, total_skills, total_skill_names, collect(s.name) as haveSkillNames " +
                             "RETURN candidate.name as candidateName, candidate.entity_id as candidateEntityId, " +

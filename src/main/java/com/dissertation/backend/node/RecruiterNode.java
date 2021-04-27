@@ -38,4 +38,7 @@ public class RecruiterNode implements Serializable {
     @Relationship(type = "MANAGES", direction = Relationship.Direction.OUTGOING )
     private Set<JobNode> jobNodeAdvertisements = new HashSet<>();
 
+    @Relationship(type = "EDUCATION", direction = Relationship.Direction.OUTGOING)
+    private Set<EducationNode> educationNodes;
+
 }

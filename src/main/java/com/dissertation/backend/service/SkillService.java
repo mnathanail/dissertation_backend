@@ -7,6 +7,7 @@ import com.dissertation.backend.node.CandidateSkillRelationship;
 import com.dissertation.backend.node.GeneralSkillNode;
 import com.dissertation.backend.node.SkillNode;
 import com.dissertation.backend.repository.CandidateNodeRepository;
+import com.dissertation.backend.repository.CandidateRepository;
 import com.dissertation.backend.repository.SkillNodeRepository;
 import com.dissertation.backend.repository.SkillRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class SkillService {
     private final SkillRepository skillRepository;
     private final SkillNodeRepository skillNodeRepository;
     private final CandidateNodeRepository candidateNodeRepository;
+    private final CandidateRepository candidateRepository;
 
     public List<Skill> getSkillLike(String skill) {
         return this.skillRepository.findFirst20ByNameContaining(skill);
@@ -186,4 +188,8 @@ public class SkillService {
         return isDeleted.isPresent();
     }
 
+    private boolean isRecruiter(Long id){
+        Utils util = new Utils(candidateRepository);
+        return util.isRecruiter(id);
+    }
 }
