@@ -53,21 +53,6 @@ public interface JobNodeRepository extends Neo4jRepository<JobNode, Long>
     void detatchRelationshipJobSkill(String jobId, Long entityId);
 
 
-    @Query("UNWIND $rows AS row " +
-            "MATCH  (s:SkillNode) " +
-            " WHERE s.entity_id = row.entity_id " +
-            " WITH  collect(row) as rows, collect(s) as allSkills " +
-            " UNWIND rows as row " +
-            " MATCH (c:CandidateNode)-[r:KNOWS]->(s:SkillNode) " +
-            " WHERE r.years_of_experience >= row.yearsOfExperience AND s in allSkills " +
-            " WITH c, collect(distinct r) as rels, collect(distinct s) as skills, allSkills " +
-            " WHERE ALL(sk in allSkills where sk in skills) " +
-            " RETURN c, rels, skills ")
-            void lastQuery();
-
-
-
-
     /*Match (j:JobNode) - [r:REQUIRES] -> (s:SkillNode) WHERE ANY (item IN $list WHERE s.name =~ '(?i)'+item) RETURN *;
     @Query (value="Match (j:JobNode) - [r:REQUIRES] -> (s:SkillNode) WHERE ANY (item IN $list WHERE j.name =~ '(?i)'+item) RETURN j",
             countQuery="Match (j:JobNode) - [r:REQUIRES] -> (s:SkillNode) WHERE ANY (item IN $list WHERE j.name =~ '(?i)'+item) RETURN count(j)")

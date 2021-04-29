@@ -1,5 +1,7 @@
 package com.dissertation.backend.controller;
 
+import com.dissertation.backend.model.SkillEntityModel;
+import com.dissertation.backend.node.CandidateModel;
 import com.dissertation.backend.node.JobNode;
 import com.dissertation.backend.service.JobService;
 import com.dissertation.backend.service.RecruiterService;
@@ -48,6 +50,16 @@ public class RecruiterController {
     public ResponseEntity<Set<JobNode>> getAllJobsRecruiterManages(@PathVariable("id") Long recruiterId){
         Set<JobNode> jobNodes = this.recruiterService.getAllJobsRecruiterManages(recruiterId);
         return ResponseEntity.ok(jobNodes);
+    }
+
+    @PostMapping(value = "/{recruiterId}/search/candidate/keywords")
+    public ResponseEntity<Set<CandidateModel>> getCandidatesBySkillList(
+            @PathVariable("recruiterId") Long recruiterId,
+            @RequestBody SkillEntityModel[] skillEntityModel
+    ){
+        Set<CandidateModel> candidates =
+                this.recruiterService.getCandidateListFromSkillList(recruiterId, skillEntityModel);
+        return ResponseEntity.ok(candidates);
     }
 
 }
