@@ -195,7 +195,8 @@ public class JobService {
                             "MATCH (c:CandidateNode) WHERE not ((c)-[:APPLIED_FOR]->(job)) " +
                             "MATCH (job)-[r:REQUIRES]->(s:SkillNode)<-[k:KNOWS]-(c) " +
                             "WHERE r.years_of_experience <= k.years_of_experience " +
-                            "WITH c as candidate, count(s) as skills, total_skills, total_skill_names, collect(s.name) as haveSkillNames " +
+                            "WITH c as candidate, count(s) as skills, total_skills, total_skill_names, " +
+                            "collect(s.name) as haveSkillNames " +
                             "RETURN candidate.name as candidateName, candidate.entity_id as candidateEntityId, " +
                             "round(10^2*skills/total_skills)/10^2 as percent, " +
                             "skills as candidateSkillNumber, total_skills as totalSkillsNumber, " +
