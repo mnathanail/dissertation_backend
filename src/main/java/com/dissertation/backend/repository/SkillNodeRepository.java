@@ -40,6 +40,8 @@ public interface SkillNodeRepository extends Neo4jRepository<SkillNode, String> 
     @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid = $uuid DELETE r;")
     void deleteAllByRelUuidIn(Long entityId, String uuid);
 
+    @Query("MATCH (c:RecruiterNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid = $uuid DELETE r;")
+    void deleteAllByRelUuidInRec(Long entityId, String uuid);
 
 /*  where in..
     @Query("MATCH (c:CandidateNode {entity_id:$entityId})-[r:KNOWS]->(:SkillNode) WHERE r.relUuid in $uuids DELETE r;")
